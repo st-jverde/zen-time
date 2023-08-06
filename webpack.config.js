@@ -1,5 +1,5 @@
-// const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     mode: 'development',  // Setting mode to 'development'
@@ -10,13 +10,16 @@ module.exports = {
         publicPath: '/'
     },
     devServer: {
-        static: {
-            directory: path.join(__dirname, 'dist'),
-        },
-        compress: true,
-        port: 9000,
-        historyApiFallback: true,
+      static: path.join(__dirname, 'dist'),
+      compress: true,
+      port: 9000,
+      historyApiFallback: true,
     },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: './index.html'
+      })
+    ],
     module: {
         rules: [
             {
