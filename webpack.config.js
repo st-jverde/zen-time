@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 module.exports = {
     mode: 'development',  // Setting mode to 'development'
@@ -9,6 +10,7 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
+    target: 'web',
     devServer: {
       static: path.join(__dirname, 'dist'),
       compress: true,
@@ -18,18 +20,47 @@ module.exports = {
     plugins: [
       new HtmlWebpackPlugin({
         template: './index.html'
-      })
-    ],
+      }),
+      process.env.NODE_ENV === 'development' && new ReactRefreshWebpackPlugin(),
+    ].filter(Boolean),
     module: {
       rules: [
         {
-          test: /\.(js|jsx)$/,
-          exclude: /node_modules/,
-          use: ['babel-loader']
+            test: /\.(js|jsx)$/,
+            exclude: /node_modules/,
+            use: [
+                {
+                    loader: 'babel-loader',
+                    options: {
+                        // This is required for react-refresh to function:
+                        plugins: [
+                            process.env.NODE_ENV === 'development' && require.resolve('react-refresh/babel')
+                        ].filter(Boolean)
+                    }
+                }
+            ]
+        },
+        {
+            test: /\.css$/,
+            use: [
+                'style-loader', 
+                'css-loader', 
+                {
+                    loader: 'postcss-loader',
+                    options: {
+                        postcssOptions: {
+                            plugins: [
+                                require('tailwindcss'),
+                                require('autoprefixer')
+                            ]
+                        }
+                    }
+                }
+            ]
         }
-      ]
+      ]    
     },
     resolve: {
       extensions: ['.jsx', '.js'],
-  }
+    }
 };
