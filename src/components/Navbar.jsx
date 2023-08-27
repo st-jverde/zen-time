@@ -14,9 +14,9 @@ const Navbar = ({ onTimeSelect, selectedTime }) => {
           { [5, 15, 30, 45].map(time => (
             <li key={time}>
               <button
-                className={`outline-none ml-2 pr-6 pl-2 py-1 rounded bg-ter text-sec border-2
-                            ${selectedTime === time ? 'outline-none border-main' : 'border-transparent'}
-                            hover:border-main`}
+                className={`ml-2 pr-6 pl-2 py-1 rounded bg-ter text-sec border-2
+                            ${selectedTime === time ? 'outline-none border-sec' : 'border-transparent'}
+                            hover:border-sec`}
                 onClick={() => onTimeSelect(time)}>
                 {time} min
               </button>
