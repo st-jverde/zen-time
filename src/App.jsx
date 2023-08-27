@@ -15,7 +15,7 @@ const App = () => {
 
   return (
     <div className="flex h-screen">
-      <Navbar onTimeSelect={handleTimeSelect} />
+      <Navbar onTimeSelect={handleTimeSelect} selectedTime={selectedTime} />
       <Main selectedTime={selectedTime} />
     </div>
   );

@@ -4,3 +4,36 @@
     --tertiary-color: #004643;
     --main-background-color: #0C1618;
  }
+
+ .toggle {
+  display: inline-block;
+  position: relative;
+  height: 100px;
+  width: 100px;
+}
+
+.toggle:before {
+  box-shadow: 0;
+  border-radius: 84.5px;
+  background: var(--primary-color);
+  position: absolute;
+  margin-left: -36px;
+  margin-top: -36px;
+  opacity: 0.2;
+  height: 72px;
+  width: 72px;
+  left: 50%;
+  top: 50%;
+}
+
+.toggle .button {
+  /* ... (rest of the properties remain the same) ... */
+  background: var(--secondary-color);
+}
+
+.toggle .label {
+  /* ... (rest of the properties remain the same) ... */
+  color: rgba(0, 0, 0, 0.9); /* Adjust if you have a specific variable for text color */
+}
+
+/* ... (rest of the CSS remains the same) ... */

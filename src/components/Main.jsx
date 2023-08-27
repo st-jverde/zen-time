@@ -21,12 +21,13 @@ const Main = ({ selectedTime }) => {
         return () => clearInterval(timer);
     }, [isRunning, countdown]);
 
-    const startTimer = () => {
-        setIsRunning(true);
+    const toggleTimer = () => {
+        setIsRunning(!isRunning);
     }
 
-    const stopTimer = () => {
+    const resetTimer = () => {
         setIsRunning(false);
+        setCountdown(selectedTime * 60);
     }
 
     const minutes = Math.floor(countdown / 60);
@@ -36,21 +37,21 @@ const Main = ({ selectedTime }) => {
         <div className="flex-1 ml-64 bg-dark flex items-center justify-center">
             <div className="text-center">
                 <div className="text-9xl mb-4 text-main">
-                    <h1 className='text-main-1'>
+                    <h1 className='text-main'>
                     {`${minutes}:${seconds < 10 ? '0' + seconds : seconds}`}
-                    </h1>    
+                    </h1>
                 </div>
-                <button 
-                    onClick={startTimer} 
-                    className="mr-4 bg-secondary-2 hover:bg-nav text-tertiary hover:text-secondary-1 px-4 py-2 rounded"
+                <button
+                    onClick={toggleTimer}
+                    className="mr-4 bg-sec hover:bg-ter text-ter hover:text-sec px-4 py-2 rounded"
                 >
-                    Start
+                    {isRunning ? 'Pause' : 'Start'}
                 </button>
-                <button 
-                    onClick={stopTimer} 
-                    className="bg-nav hover:bg-secondary-2 text-secondary-1 hover:text-tertiary px-4 py-2 rounded"
+                <button
+                    onClick={resetTimer}
+                    className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
                 >
-                    Stop
+                    Reset
                 </button>
             </div>
         </div>
