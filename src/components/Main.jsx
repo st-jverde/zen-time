@@ -39,17 +39,6 @@ const Main = ({ selectedTime }) => {
     
         loadAllAudios();
     }, []);
-    
-
-    // useEffect(() => {
-    //     loadAudio()
-    //         .then(() => {
-    //             setAudioReady(true);
-    //         })
-    //         .catch(err => {
-    //             console.error('Failed to load audio:', err);
-    //         });
-    // }, []);
 
     const toggleTimer = async () => {
         // Check if Tone is defined and if the audio context is not in a "running" state
