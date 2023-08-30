@@ -26,14 +26,30 @@ const Main = ({ selectedTime }) => {
     }, [isRunning, countdown]);
 
     useEffect(() => {
-        loadAudio()
-            .then(() => {
+        // This function will help us chain our promises for each audio load
+        const loadAllAudios = async () => {
+            try {
+                await loadAudio("startGong", "/samples/ZT-start-gong.mp3");
+                await loadAudio("endGong", "/samples/ZT-end-gong.mp3");
                 setAudioReady(true);
-            })
-            .catch(err => {
-                console.error('Failed to load audio:', err);
-            });
+            } catch (error) {
+                console.error('Failed to load audio:', error);
+            }
+        };
+    
+        loadAllAudios();
     }, []);
+    
+
+    // useEffect(() => {
+    //     loadAudio()
+    //         .then(() => {
+    //             setAudioReady(true);
+    //         })
+    //         .catch(err => {
+    //             console.error('Failed to load audio:', err);
+    //         });
+    // }, []);
 
     const toggleTimer = async () => {
         // Check if Tone is defined and if the audio context is not in a "running" state
@@ -53,9 +69,9 @@ const Main = ({ selectedTime }) => {
         }
         
         if (!isRunning) {
-            playSample(); 
+            playSample("startGong"); 
         }
-        
+
         setIsRunning(!isRunning);
     };
     
@@ -67,6 +83,13 @@ const Main = ({ selectedTime }) => {
 
     const minutes = Math.floor(countdown / 60);
     const seconds = countdown % 60;
+
+    useEffect(() => {
+        if (minutes === 0 && seconds === 0) {
+            playSample("endGong");
+        }
+    }, [minutes, seconds]);
+    
 
     return (
         <div className="flex-1 ml-64 bg-dark flex items-center justify-center">
@@ -80,9 +103,12 @@ const Main = ({ selectedTime }) => {
                             </h1>
                         </div>
                         <button 
-                            onClick={() => {
-                                initializeAudio().then(() => {
+                           onClick={() => {
+                                // Initialize the audio for both samples when the button is clicked
+                                initializeAudio("startGong").then(() => {
+                                initializeAudio("endGong").then(() => {
                                     setAudioInitialized(true);
+                                    });
                                 });
                             }}
                             className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
@@ -116,45 +142,6 @@ const Main = ({ selectedTime }) => {
             </div>
         </div>
     );
-    
-
-    // return (
-    //     <div className="flex-1 ml-64 bg-dark flex items-center justify-center">
-    //         <div className="text-center">
-    //             <div className="text-9xl mb-4 text-main">
-    //                 <h1 className='text-main'>
-    //                     {`${minutes}:${seconds < 10 ? '0' + seconds : seconds}`}
-    //                 </h1>
-    //             </div>
-    //             <button
-    //                 onClick={toggleTimer}
-    //                 className="mr-4 bg-sec hover:bg-ter text-ter hover:text-sec px-4 py-2 rounded"
-    //             >
-    //                 {isRunning ? 'Pause' : 'Start'}
-    //             </button>
-    //             <button
-    //                 onClick={resetTimer}
-    //                 className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
-    //             >
-    //                 Reset
-    //             </button>
-    //             {
-    //                 !audioInitialized && 
-    //                 <button 
-    //                     onClick={() => {
-    //                         initializeAudio().then(() => {
-    //                             setAudioInitialized(true);
-    //                         });
-    //                     }}
-    //                     className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
-    //                 >
-    //                     Initialize Audio
-    //                 </button>
-    //             }
-    //             {!audioReady && <p>Loading audio...</p>}
-    //         </div>
-    //     </div>
-    // );
 };
 
 export default Main;

@@ -11,7 +11,7 @@ const Navbar = ({ onTimeSelect, selectedTime }) => {
       </div>
       <div>
         <ul className="space-y-2 pl-1">
-          { [5, 15, 30, 45].map(time => (
+          { [0.10, 5, 15, 30, 45].map(time => (
             <li key={time}>
               <button
                 className={`ml-2 pr-6 pl-2 py-1 rounded bg-ter text-sec border-2
