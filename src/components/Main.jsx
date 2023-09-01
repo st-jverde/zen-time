@@ -76,8 +76,18 @@ const Main = ({ selectedTime }) => {
     useEffect(() => {
         if (minutes === 0 && seconds === 0) {
             playSample("endGong");
+    
+            // Start a 10-second timeout
+            const autoReset = setTimeout(() => {
+                setIsRunning(false);
+                setCountdown(selectedTime * 60);
+            }, 10000);  // 10000ms = 10s
+    
+            // Clear the timeout if the component unmounts
+            return () => clearTimeout(autoReset);
         }
     }, [minutes, seconds]);
+    
     
 
     return (

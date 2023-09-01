@@ -6,7 +6,7 @@ import Navbar from './components/Navbar';
 import Main from './components/Main';
 
 const App = () => {
-  const [selectedTime, setSelectedTime] = useState(15);
+  const [selectedTime, setSelectedTime] = useState(0.2);
 
   // A function that the Navbar can call to set the time
   const handleTimeSelect = (time) => {
