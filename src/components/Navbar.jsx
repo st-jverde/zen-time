@@ -41,5 +41,4 @@ const Navbar = ({ onTimeSelect, selectedTime }) => {
   );
 };
 
-
 export default Navbar;

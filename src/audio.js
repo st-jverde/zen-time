@@ -1,4 +1,7 @@
-import { Player, start, getContext, Buffer } from "tone";
+import * as Tone from 'tone';
+
+const { Player, start, getContext, Buffer } = Tone;
+// import { Player, start, getContext, Buffer } from "tone";
 
 const players = {};
 const audioBuffers = {};
