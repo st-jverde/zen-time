@@ -103,15 +103,10 @@ const Main = ({ selectedTime }) => {
   };
 
   const stopAndDisposeLoops = () => {
-    if (sampleLoopRef.current?.breathLoop) {
-      sampleLoopRef.current.breathLoop.stop(0);
-      sampleLoopRef.current.breathLoop.dispose();
-    }
-    if (sampleLoopRef.current?.drumLoop) {
-      sampleLoopRef.current.drumLoop.stop(0);
-      sampleLoopRef.current.drumLoop.dispose();
-    }
-  };
+    clearInterval(sampleLoopRef.current?.breathInterval);
+    clearInterval(sampleLoopRef.current?.drumInterval);
+};
+
 
   useEffect(() => {
     if (countdown === 4) stopAndDisposeLoops();
