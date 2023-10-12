@@ -50,7 +50,7 @@ export const playSample = (sampleName, onEndCallback) => {
 };
 
 // Utility to set global volume
-export const setGlobalVolume = (volumeValue) => {
-  Tone.Destination.volume.value = volumeValue;
-};
+// export const setGlobalVolume = (volumeValue) => {
+//   Tone.Destination.volume.value = volumeValue;
+// };
   

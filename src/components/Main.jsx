@@ -8,15 +8,17 @@ const Main = ({ selectedTime }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
-  const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
+  // const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
 
-  const breathSamples = ["breath-1", "breath-2"];
+  const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
 
   const breathSampleIndex = useRef(0);
   const drumSampleIndex = useRef(0);
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
+
+  let BPM = 22;
 
   useEffect(() => {
     setCountdown(selectedTime * 60);
@@ -42,6 +44,8 @@ const Main = ({ selectedTime }) => {
           await loadAudio("endGong", "/samples/ZT-end-gong.mp3");
           await loadAudio("breath-1", "/samples/breath-1.mp3");
           await loadAudio("breath-2", "/samples/breath-2.mp3");
+          await loadAudio("breath-3", "/samples/breath-3.mp3");
+          await loadAudio("breath-4", "/samples/breath-4.mp3");
           await loadAudio("ZT-sha-L", "/samples/ZT-sha-L.mp3");
           await loadAudio("ZT-sha-R", "/samples/ZT-sha-R.mp3");
           setAudioReady(true);
@@ -68,7 +72,7 @@ const Main = ({ selectedTime }) => {
 
         // Update the drum sample index
         drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
-    }, "4n").start();
+    }, "8n").start();
   };
 
   const cleanupLoops = () => {
@@ -92,9 +96,6 @@ const stopAndDisposeLoops = () => {
     breathSampleIndex.current = 0;
     drumSampleIndex.current = 0;
 };
-
-
-  const BPM = 23;
 
   const toggleTimer = async () => {
     if (Tone && Tone.context && Tone.context.state !== 'running') {
@@ -124,6 +125,8 @@ const stopAndDisposeLoops = () => {
   const resetTimer = () => {
     setIsRunning(false);
     setCountdown(selectedTime * 60);
+    cleanupLoops();
+    Tone.Transport.stop();
   };
 
   useEffect(() => {
@@ -145,11 +148,10 @@ const stopAndDisposeLoops = () => {
   }, [countdown]);
 
   // Handler for when the global volume slider changes
-  const handleGlobalVolumeChange = (event) => {
-    const volumeValue = event.target.value;
-    setGlobalVolume(volumeValue);
-    setGlobalVolume(volumeValue); // from audio.js
-  };
+  // const handleGlobalVolumeChange = (event) => {
+  //   const volumeValue = event.target.value;
+  //   setGlobalVolume(volumeValue);
+  // };
 
   return (
     <div className="flex-1 ml-64 bg-dark flex items-center justify-center">
@@ -167,6 +169,8 @@ const stopAndDisposeLoops = () => {
                   initializeAudio("endGong"),
                   initializeAudio("breath-1"),
                   initializeAudio("breath-2"),
+                  initializeAudio("breath-3"),
+                  initializeAudio("breath-4"),
                   initializeAudio("ZT-sha-L"),
                   initializeAudio("ZT-sha-R")
                 ])
@@ -201,6 +205,7 @@ const stopAndDisposeLoops = () => {
               type="range" 
               min="-30" 
               max="0" 
+              className="mr-4 bg-sec hover:bg-ter text-ter hover:text-sec px-4 py-2 rounded"
               value={globalVolume} 
               onChange={handleGlobalVolumeChange} 
             />} */}
