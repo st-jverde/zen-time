@@ -8,10 +8,15 @@ const Main = ({ selectedTime }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
-  const [currentBreathSample, setCurrentBreathSample] = useState("breath-1");
-  const [currentDrumSample, setCurrentDrumSample] = useState("ZT-sha-L");
+  const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
 
-  const sampleLoopRef = useRef(null);
+  const breathSamples = ["breath-1", "breath-2"];
+  const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
+
+  const breathSampleIndex = useRef(0);
+  const drumSampleIndex = useRef(0);
+  const breathLoopRef = useRef(null);
+  const drumLoopRef = useRef(null);
 
   useEffect(() => {
     setCountdown(selectedTime * 60);
@@ -32,21 +37,64 @@ const Main = ({ selectedTime }) => {
   useEffect(() => {
     // This function will help us chain our promises for each audio load
     const loadAllAudios = async () => {
-        try {
-            await loadAudio("startGong", "/samples/ZT-start-gong.mp3");
-            await loadAudio("endGong", "/samples/ZT-end-gong.mp3");
-            await loadAudio("breath-1", "/samples/breath-1.mp3");
-            await loadAudio("breath-2", "/samples/breath-2.mp3");
-            await loadAudio("ZT-sha-L", "/samples/ZT-sha-L.mp3");
-            await loadAudio("ZT-sha-R", "/samples/ZT-sha-R.mp3");
-            setAudioReady(true);
-        } catch (error) {
-            console.error('Failed to load audio:', error);
-        }
-    };
+      try {
+          await loadAudio("startGong", "/samples/ZT-start-gong.mp3");
+          await loadAudio("endGong", "/samples/ZT-end-gong.mp3");
+          await loadAudio("breath-1", "/samples/breath-1.mp3");
+          await loadAudio("breath-2", "/samples/breath-2.mp3");
+          await loadAudio("ZT-sha-L", "/samples/ZT-sha-L.mp3");
+          await loadAudio("ZT-sha-R", "/samples/ZT-sha-R.mp3");
+          setAudioReady(true);
+      } catch (error) {
+          console.error('Failed to load audio:', error);
+      }
+    };  
+    loadAllAudios();
+  }, []);
 
-        loadAllAudios();
-    }, []);
+  const initiateLoops = () => {
+    breathLoopRef.current = new Tone.Loop((time) => {
+        // Play the current breath sample
+        playSample(breathSamples[breathSampleIndex.current]);
+
+        // Update the breath sample index
+        breathSampleIndex.current = (breathSampleIndex.current + 1) % breathSamples.length;
+
+    }, "2n").start();
+
+    drumLoopRef.current = new Tone.Loop((time) => {
+        // Play the current drum sample
+        playSample(drumSamples[drumSampleIndex.current]);
+
+        // Update the drum sample index
+        drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
+    }, "4n").start();
+  };
+
+  const cleanupLoops = () => {
+    breathLoopRef.current?.stop(0);
+    drumLoopRef.current?.stop(0);
+    breathSampleIndex.current = 0;
+    drumSampleIndex.current = 0;
+};
+
+const stopAndDisposeLoops = () => {
+    if (breathLoopRef.current) {
+      breathLoopRef.current.stop(0);
+      breathLoopRef.current.dispose();
+      breathLoopRef.current = null; 
+    }
+    if (drumLoopRef.current) {
+      drumLoopRef.current.stop(0);
+      drumLoopRef.current.dispose();
+      drumLoopRef.current = null;
+    }
+    breathSampleIndex.current = 0;
+    drumSampleIndex.current = 0;
+};
+
+
+  const BPM = 23;
 
   const toggleTimer = async () => {
     if (Tone && Tone.context && Tone.context.state !== 'running') {
@@ -61,56 +109,21 @@ const Main = ({ selectedTime }) => {
     setIsRunning(!isRunning);
 
     if (!isRunning) {
-      playSample("startGong");  // Ensure playback rate is acceptable
+      Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
+      playSample("startGong");
       const delayStart = setTimeout(() => initiateLoops(), 6000);
       Tone.Transport.start();
 
       return () => clearTimeout(delayStart);
     } else {
-      // Cleaning up any active loops/intervals if pausing
       cleanupLoops();
+      Tone.Transport.stop();
     }
-  };
-
-  const initiateLoops = () => {
-    const breathInterval = setInterval(() => {
-        playSample(currentBreathSample, 1);
-        setCurrentBreathSample(
-          prev => (prev === "breath-1" ? "breath-2" : "breath-1")
-        );
-    }, 8000);  // 8000ms = 8s
-    const drumInterval = setInterval(() => {
-        playSample(currentDrumSample, 1);
-        setCurrentDrumSample(
-          prev => (prev === "ZT-sha-L" ? "ZT-sha-R" : "ZT-sha-L")
-        );
-    }, 2000);  // 2000ms = 2s
-    // Store the intervals in a ref for later cleanup
-    sampleLoopRef.current = {
-        breathInterval,
-        drumInterval
-    };
-  };
-
-  const cleanupLoops = () => {
-    clearInterval(sampleLoopRef.current?.breathInterval);
-    clearInterval(sampleLoopRef.current?.drumInterval);
   };
 
   const resetTimer = () => {
     setIsRunning(false);
     setCountdown(selectedTime * 60);
-  };
-
-  const stopAndDisposeLoops = () => {
-    if (sampleLoopRef.current?.breathLoop) {
-      sampleLoopRef.current.breathLoop.stop(0);
-      sampleLoopRef.current.breathLoop.dispose();
-    }
-    if (sampleLoopRef.current?.drumLoop) {
-      sampleLoopRef.current.drumLoop.stop(0);
-      sampleLoopRef.current.drumLoop.dispose();
-    }
   };
 
   useEffect(() => {
@@ -130,6 +143,13 @@ const Main = ({ selectedTime }) => {
       return () => clearTimeout(autoReset);
     }
   }, [countdown]);
+
+  // Handler for when the global volume slider changes
+  const handleGlobalVolumeChange = (event) => {
+    const volumeValue = event.target.value;
+    setGlobalVolume(volumeValue);
+    setGlobalVolume(volumeValue); // from audio.js
+  };
 
   return (
     <div className="flex-1 ml-64 bg-dark flex items-center justify-center">
@@ -177,6 +197,13 @@ const Main = ({ selectedTime }) => {
             >
               Reset
             </button>
+            {/* {<input 
+              type="range" 
+              min="-30" 
+              max="0" 
+              value={globalVolume} 
+              onChange={handleGlobalVolumeChange} 
+            />} */}
           </>
         )}
       </div>
