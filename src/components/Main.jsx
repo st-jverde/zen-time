@@ -126,6 +126,11 @@ const stopAndDisposeLoops = () => {
     setCountdown(selectedTime * 60);
   };
 
+  const stopAndDisposeLoops = () => {
+    clearInterval(sampleLoopRef.current?.breathInterval);
+    clearInterval(sampleLoopRef.current?.drumInterval);
+  };
+
   useEffect(() => {
     if (countdown === 4) stopAndDisposeLoops();
   }, [countdown]);
