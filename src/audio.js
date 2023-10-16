@@ -24,6 +24,7 @@ export const initializeAudio = async (sampleName) => {
 
         if (!players[sampleName] && audioBuffers[sampleName]) {
             players[sampleName] = new Player(audioBuffers[sampleName]).toDestination();
+            players[sampleName].playbackRate = 1;
         } else if (!audioBuffers[sampleName]) {
             console.error(`Audio buffer for ${sampleName} is not loaded.`);
         }
@@ -50,7 +51,8 @@ export const playSample = (sampleName, onEndCallback) => {
 };
 
 // Utility to set global volume
-// export const setGlobalVolume = (volumeValue) => {
-//   Tone.Destination.volume.value = volumeValue;
-// };
+export const setGlobalVolume = (volumeValue) => {
+    console.log('Setting Volume:', volumeValue);
+    Tone.Destination.volume.value = volumeValue;
+};
   
