@@ -34,14 +34,14 @@ export const initializeAudio = async (sampleName) => {
     }
 };
 
-export const playSample = (sampleName, onEndCallback) => {
+export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
     if (players[sampleName]) {
         if (Tone.getContext().state !== "running") {
             console.warn("Tone context is not in 'running' state.");
             return;
         }
+        players[sampleName].playbackRate = playbackRate;
         players[sampleName].start();
-
         if (onEndCallback) {
             players[sampleName].onended = onEndCallback;
         }
@@ -49,6 +49,7 @@ export const playSample = (sampleName, onEndCallback) => {
         console.error(`Sample ${sampleName} not loaded or player not initialized`);
     }
 };
+
 
 // Utility to set global volume
 export const setGlobalVolume = (volumeValue) => {

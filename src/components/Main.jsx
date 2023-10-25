@@ -8,7 +8,7 @@ const Main = ({ selectedTime }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
-  const [BPM, setBPM] = useState(50);
+  const [BPM, setBPM] = useState(30);
 
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
@@ -19,36 +19,33 @@ const Main = ({ selectedTime }) => {
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
 
-  let intervalId = null; // ID of the interval to clear it later
+  let intervalId = useRef(null); // ID of the interval to clear it later
 
-  const adjustBPM = (durationInMinutes) => {
-    setBPM(50);
-    let currentBPM = 50;
-    const durationInSeconds = durationInMinutes * 60;
-    const decreaseRate = 40 / durationInSeconds; // Decrease by 4 BPM over the specified duration
-    // Clear any previous intervals
-    if (intervalId) {
-        clearInterval(intervalId);
-    }
-    intervalId = setInterval(() => {
-      setBPM((prevBPM) => prevBPM - decreaseRate);
+  const adjustBPM = () => {
+    let currentBPM = BPM;
+    // totalBPMChange = 20; // Change BPM from start 30 to 10
+    const durationInSeconds = selectedTime * 60;
+    const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
+    
+    intervalId.current = setInterval(() => {
+      setBPM((prevBPM) => {
+        currentBPM = prevBPM - decreaseRate;
+        if (currentBPM <= 10) {
+          console.log(breathLoopRef.current, drumLoopRef.current);
+          clearInterval(intervalId.current);
+          return 10;
+        }
+        return currentBPM;
+      });
+
       // Update Tone.Transport's BPM
-      Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds) 
-      if (currentBPM <= 10) {
-          clearInterval(intervalId); // Stop the interval once BPM reaches 18
-      }
-    }, 1000); // Update every second
+      Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
+    }, 1000);
   };
 
   const getPlaybackRate = (currentBPM) => {
-    const startBPM = 50;
-    const endBPM = 10;
-    const startRate = 1; // 100% speed
-    const endRate = 0.1; // 80% speed
-  
-    // Linear interpolation
-    return startRate + (endRate - startRate) * ((currentBPM - startBPM) / (endBPM - startBPM));
-  }
+    return currentBPM / 30; // Assuming 30 BPM is the original BPM for your samples
+  };
   
 
   useEffect(() => {
@@ -90,18 +87,13 @@ const Main = ({ selectedTime }) => {
   const initiateLoops = () => {
     breathLoopRef.current = new Tone.Loop((time) => {
       const rate = getPlaybackRate(BPM);
-      // Play the current breath sample
       playSample(breathSamples[breathSampleIndex.current], rate);
-      // Update the breath sample index
       breathSampleIndex.current = (breathSampleIndex.current + 1) % breathSamples.length;
-
     }, "2n").start();
 
     drumLoopRef.current = new Tone.Loop((time) => {
       const rate = getPlaybackRate(BPM);
-      // Play the current drum sample
       playSample(drumSamples[drumSampleIndex.current], rate);
-      // Update the drum sample index
       drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
     }, "8n").start();
   };
@@ -141,7 +133,7 @@ const stopAndDisposeLoops = () => {
     setIsRunning(!isRunning);
 
     if (!isRunning) {
-      adjustBPM(selectedTime); // start BPM adjustment
+      adjustBPM(); // start BPM adjustment
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       console.log(BPM);
       playSample("startGong");
@@ -150,7 +142,7 @@ const stopAndDisposeLoops = () => {
 
       return () => clearTimeout(delayStart);
     } else {
-      clearInterval(intervalId);
+      clearInterval(intervalId.current);
       cleanupLoops();
       Tone.Transport.stop();
     }
@@ -160,13 +152,15 @@ const stopAndDisposeLoops = () => {
     setIsRunning(false);
     setCountdown(selectedTime * 60);
     cleanupLoops();
+    clearInterval(intervalId.current);
+    setBPM(30);
     Tone.Transport.stop();
   };
 
   // cleanup on component unmount
   useEffect(() => {
     return () => {
-        clearInterval(intervalId);
+        clearInterval(intervalId.current);
     };
 }, []);
 
@@ -179,11 +173,12 @@ const stopAndDisposeLoops = () => {
     if (countdown === 0) {
       playSample("endGong", 1);
       stopAndDisposeLoops();
-      clearInterval(intervalId);
+      clearInterval(intervalId.current);
 
       const autoReset = setTimeout(() => {
         setIsRunning(false);
         setCountdown(selectedTime * 60);
+        setBPM(30);
       }, 10000);
 
       return () => clearTimeout(autoReset);
