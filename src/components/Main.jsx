@@ -164,7 +164,6 @@ const stopAndDisposeLoops = () => {
     };
 }, []);
 
-
   useEffect(() => {
     if (countdown === 4) stopAndDisposeLoops();
   }, [countdown]);
