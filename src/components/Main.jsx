@@ -47,11 +47,12 @@ const Main = ({ selectedTime }) => {
     return currentBPM / 30; // Assuming 30 BPM is the original BPM for your samples
   };
   
-
+  // SET SELECTED TIME IN TIMER
   useEffect(() => {
     setCountdown(selectedTime * 60);
   }, [selectedTime]);
 
+  // TIMER COUNTDOWN
   useEffect(() => {
     let timer;
     if (isRunning && countdown > 0) {
@@ -64,8 +65,8 @@ const Main = ({ selectedTime }) => {
     return () => clearInterval(timer);
   }, [isRunning, countdown]);
 
+  // LOAD ALL AUDIO FILES
   useEffect(() => {
-    // This function will help us chain our promises for each audio load
     const loadAllAudios = async () => {
       try {
           await loadAudio("startGong", "/samples/ZT-start-gong.mp3");
@@ -84,6 +85,7 @@ const Main = ({ selectedTime }) => {
     loadAllAudios();
   }, []);
 
+  // SAMPLES THAT LOOP / LOOP FUNCTIONALITY
   const initiateLoops = () => {
     breathLoopRef.current = new Tone.Loop((time) => {
       const rate = getPlaybackRate(BPM);
@@ -120,45 +122,40 @@ const stopAndDisposeLoops = () => {
     drumSampleIndex.current = 0;
 };
 
-  const toggleTimer = async () => {
-    if (Tone && Tone.context && Tone.context.state !== 'running') {
-      try {
-        await Tone.context.resume();
-      } catch (error) {
-        console.error("Failed to resume the Tone audio context:", error);
-        return;
-      }
+const toggleTimer = async () => {
+  if (Tone && Tone.context && Tone.context.state !== 'running') {
+    try {
+      await Tone.context.resume();
+    } catch (error) {
+      console.error("Failed to resume the Tone audio context:", error);
+      return;
     }
-
-    setIsRunning(!isRunning);
-
-    if (!isRunning) {
-      adjustBPM(); // start BPM adjustment
-      Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
-      console.log(BPM);
-      playSample("startGong");
-      const delayStart = setTimeout(() => initiateLoops(), 2000);
-      Tone.Transport.start();
-
-      return () => clearTimeout(delayStart);
-    } else {
-      clearInterval(intervalId.current);
-      cleanupLoops();
-      Tone.Transport.stop();
-    }
-  };
-
-  const resetTimer = () => {
-    setIsRunning(false);
-    setCountdown(selectedTime * 60);
-    cleanupLoops();
+  }
+  setIsRunning(!isRunning);
+  if (!isRunning) {
+    adjustBPM(); // start BPM adjustment
+    Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
+    console.log(BPM);
+    playSample("startGong");
+    const delayStart = setTimeout(() => initiateLoops(), 2000);
+    Tone.Transport.start();
+    return () => clearTimeout(delayStart);
+  } else {
     clearInterval(intervalId.current);
-    setBPM(30);
+    cleanupLoops();
     Tone.Transport.stop();
-  };
-
-  // cleanup on component unmount
-  useEffect(() => {
+  }
+};
+const resetTimer = () => {
+  setIsRunning(false);
+  setCountdown(selectedTime * 60);
+  cleanupLoops();
+  clearInterval(intervalId.current);
+  setBPM(30);
+  Tone.Transport.stop();
+};
+// cleanup on component unmount
+useEffect(() => {
     return () => {
         clearInterval(intervalId.current);
     };
