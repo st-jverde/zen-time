@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
-import { loadAudio, initializeAudio, playSample } from '../audio';
+import { 
+  loadAudio, 
+  initializeAudio, 
+  playSample,
+  increaseFilterFrequency,
+  setReverbWetLevel 
+} from '../audio';
 import '../tailwind.css';
 
 const Main = ({ selectedTime }) => {
@@ -9,6 +15,8 @@ const Main = ({ selectedTime }) => {
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
+  // const [filter, setFilter] = useState(60);
+  // const [reverb, setReverb] = useState(0.2);
 
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
@@ -18,6 +26,27 @@ const Main = ({ selectedTime }) => {
   const drumSampleIndex = useRef(0);
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
+
+  const highpassEffectRef = useRef(null);
+  const reverbEffectRef = useRef(null);
+
+  useEffect(() => {
+    // Initialize effects when the component mounts
+    highpassEffectRef.current = new Tone.Filter({
+      type: 'highpass',
+      frequency: 60
+    }).toDestination();
+    
+    reverbEffectRef.current = new Tone.Reverb({
+      wet: 0.2
+    }).toDestination();
+
+    return () => {
+      // Cleanup effects on component unmount
+      highpassEffectRef.current.dispose();
+      reverbEffectRef.current.dispose();
+    }
+  }, []);
 
   let intervalId = useRef(null); // ID of the interval to clear it later
 
@@ -42,6 +71,21 @@ const Main = ({ selectedTime }) => {
       Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
     }, 1000);
   };
+
+  const adjustFilter = () => {
+    const durationInSeconds = selectedTime * 60;
+    const filterIncrease = (20000 - 60) / durationInSeconds;
+    const newFilterFrequency = 60 + filterIncrease * (durationInSeconds - countdown);
+    increaseFilterFrequency(highpassEffectRef.current, newFilterFrequency);
+    console.log("filter:", highpassEffectRef.current, newFilterFrequency);
+  };
+  
+  const adjustReverb = () => {
+    const durationInSeconds = selectedTime * 60;
+    const newReverbWetLevel = countdown / durationInSeconds;
+    setReverbWetLevel(reverbEffectRef.current, newReverbWetLevel);
+    console.log("Reverb:", reverbEffectRef.current, newReverbWetLevel);
+  };  
 
   const getPlaybackRate = (currentBPM) => {
     return currentBPM / 30; // Assuming 30 BPM is the original BPM for your samples
@@ -87,13 +131,40 @@ const Main = ({ selectedTime }) => {
   const initiateLoops = () => {
     breathLoopRef.current = new Tone.Loop((time) => {
       const rate = getPlaybackRate(BPM);
-      playSample(breathSamples[breathSampleIndex.current], rate);
+      adjustReverb();
+      adjustFilter();
+
+      const sample = playSample(breathSamples[breathSampleIndex.current], rate);
+
+      console.log("Sample: ", sample);
+      console.log("HighpassEffect: ", highpassEffectRef.current);
+      console.log("ReverbEffect: ", reverbEffectRef.current);
+
+      if (sample) {
+          sample.connect(highpassEffectRef.current).connect(reverbEffectRef.current);
+      } else {
+          console.error('Unable to play sample and connect effects.');
+      }
+
       breathSampleIndex.current = (breathSampleIndex.current + 1) % breathSamples.length;
     }, "2n").start();
 
     drumLoopRef.current = new Tone.Loop((time) => {
       const rate = getPlaybackRate(BPM);
-      playSample(drumSamples[drumSampleIndex.current], rate);
+      adjustReverb();
+      adjustFilter();
+
+      const sample = playSample(drumSamples[drumSampleIndex.current], rate);
+
+      console.log("Sample: ", sample);
+      console.log("HighpassEffect: ", highpassEffectRef.current);
+      console.log("ReverbEffect: ", reverbEffectRef.current);
+
+      if (sample) {
+        sample.connect(highpassEffectRef.current).connect(reverbEffectRef.current);
+      } else {
+          console.error('Unable to play sample and connect effects.');
+      }
       drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
     }, "8n").start();
   };
@@ -120,48 +191,45 @@ const stopAndDisposeLoops = () => {
     drumSampleIndex.current = 0;
 };
 
-  const toggleTimer = async () => {
-    if (Tone && Tone.context && Tone.context.state !== 'running') {
-      try {
-        await Tone.context.resume();
-      } catch (error) {
-        console.error("Failed to resume the Tone audio context:", error);
-        return;
-      }
+const toggleTimer = async () => {
+  if (Tone && Tone.context && Tone.context.state !== 'running') {
+    try {
+      await Tone.context.resume();
+    } catch (error) {
+      console.error("Failed to resume the Tone audio context:", error);
+      return;
     }
-
-    setIsRunning(!isRunning);
-
-    if (!isRunning) {
-      adjustBPM(); // start BPM adjustment
-      Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
-      console.log(BPM);
-      playSample("startGong");
-      const delayStart = setTimeout(() => initiateLoops(), 2000);
-      Tone.Transport.start();
-
-      return () => clearTimeout(delayStart);
-    } else {
-      clearInterval(intervalId.current);
-      cleanupLoops();
-      Tone.Transport.stop();
-    }
-  };
-
-  const resetTimer = () => {
-    setIsRunning(false);
-    setCountdown(selectedTime * 60);
-    cleanupLoops();
+  }
+  setIsRunning(!isRunning);
+  if (!isRunning) {
+    adjustBPM(); // start BPM adjustment
+    adjustFilter();
+    adjustReverb();
+    Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
+    console.log(BPM);
+    playSample("startGong");
+    const delayStart = setTimeout(() => initiateLoops(), 2000);
+    Tone.Transport.start();
+    return () => clearTimeout(delayStart);
+  } else {
     clearInterval(intervalId.current);
-    setBPM(30);
+    cleanupLoops();
     Tone.Transport.stop();
+  }
+};
+const resetTimer = () => {
+  setIsRunning(false);
+  setCountdown(selectedTime * 60);
+  cleanupLoops();
+  clearInterval(intervalId.current);
+  setBPM(30);
+  Tone.Transport.stop();
+};
+// cleanup on component unmount
+useEffect(() => {
+  return () => {
+      clearInterval(intervalId.current);
   };
-
-  // cleanup on component unmount
-  useEffect(() => {
-    return () => {
-        clearInterval(intervalId.current);
-    };
 }, []);
 
   useEffect(() => {
@@ -196,14 +264,14 @@ const stopAndDisposeLoops = () => {
             <button
               onClick={() => {
                 Promise.all([
-                  initializeAudio("startGong"),
-                  initializeAudio("endGong"),
-                  initializeAudio("breath-1"),
-                  initializeAudio("breath-2"),
-                  initializeAudio("breath-3"),
-                  initializeAudio("breath-4"),
-                  initializeAudio("ZT-sha-L"),
-                  initializeAudio("ZT-sha-R")
+                  initializeAudio("startGong", highpassEffectRef.current, reverbEffectRef.current),
+                  initializeAudio("endGong", highpassEffectRef.current, reverbEffectRef.current),
+                  initializeAudio("breath-1", highpassEffectRef.current, reverbEffectRef.current),
+                  initializeAudio("breath-2", highpassEffectRef.current, reverbEffectRef.current),
+                  initializeAudio("breath-3", highpassEffectRef.current, reverbEffectRef.current),
+                  initializeAudio("breath-4", highpassEffectRef.current, reverbEffectRef.current),
+                  initializeAudio("ZT-sha-L", highpassEffectRef.current, reverbEffectRef.current),
+                  initializeAudio("ZT-sha-R", highpassEffectRef.current, reverbEffectRef.current)
                 ])
                 .then(() => setAudioInitialized(true))
                 .catch(error => console.error("Failed to initialize audio:", error));
