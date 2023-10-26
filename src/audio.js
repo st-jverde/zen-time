@@ -4,6 +4,7 @@ const { Player, start, getContext, Buffer } = Tone;
 
 const players = {};
 const audioBuffers = {};
+let reverb, highpass; 
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -29,13 +30,17 @@ export const initializeAudio = async (sampleName, highpassEffect, reverbEffect) 
             console.error(`Audio buffer for ${sampleName} is not loaded.`);
         }
 
-        // Configure the reverb effect
-        reverbEffect.decay = 1.5; // You can adjust the decay as needed
-        await reverbEffect.generate();
+        // Create and configure reverb effect
+        reverb = new Tone.Reverb().toDestination();
+        reverb.decay = 1.5; // You can adjust the decay as needed
+        await reverb.generate();
+
+        // Create highpass filter
+        highpass = new Tone.Filter(100, "highpass").connect(reverb); // Start at 100Hz
 
         // Connect the player to the highpass filter (and thus through to the reverb)
         if (players[sampleName]) {
-            players[sampleName].connect(highpassEffect);
+            players[sampleName].connect(highpass);
         }
 
     } catch (error) {
@@ -45,20 +50,18 @@ export const initializeAudio = async (sampleName, highpassEffect, reverbEffect) 
 };
 
 // Utility function to increase the filter frequency
-export const increaseFilterFrequency = (highpass, value) => {
+export const increaseFilterFrequency = (value) => {
     if (highpass) {
-        highpass.frequency.rampTo(value, 1); // 1 second ramp time, you can adjust
-        console.log("Filter: " + value);
+        highpass.frequency.rampTo(value, 10); // 1 second ramp time, you can adjust
     } else {
         console.error('Highpass filter not initialized');
     }
 };
 
 // Utility function to set reverb wet level (0 is dry, 1 is fully wet)
-export const setReverbWetLevel = (reverb, value) => {
+export const setReverbWetLevel = (value) => {
     if (reverb) {
         reverb.wet.value = value;
-        console.log("Reverb: " + value);
     } else {
         console.error('Reverb not initialized');
     }
