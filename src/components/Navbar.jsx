@@ -1,6 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
+import VolumeSlider from './VolumeSlider';
+import { setGlobalVolume } from '../audio';
 
 const Navbar = ({ onTimeSelect, selectedTime }) => {
+
+  const handleVolumeChange = (volumeValue) => {
+    console.log('Received in Navbar:', volumeValue);
+    setGlobalVolume(volumeValue); 
+  };
+
   return (
     <div className="h-screen w-64 fixed top-0 left-0 bg-ter">
       <div className="py-4 px-3">
@@ -11,7 +19,7 @@ const Navbar = ({ onTimeSelect, selectedTime }) => {
       </div>
       <>
         <ul className="space-y-2 pl-1">
-          { [0.4, 5, 15, 30, 45].map(time => (
+          { [1, 5, 15, 30, 45].map(time => (
             <li key={time}>
               <button
                 className={`ml-2 pr-6 pl-2 py-1 rounded bg-ter text-sec border-2
@@ -28,15 +36,16 @@ const Navbar = ({ onTimeSelect, selectedTime }) => {
         <h2 className='text-2xl font-bold text-sec'>Sounds</h2>
       </div>
       <>
-      <ul className="space-y-2 pl-1">
-        <li>
-          <button className="ml-2 pr-6 pl-2 py-1 rounded bg-ter text-sec">Rhythm</button>
-        </li>
-        <li>
-          <button className="ml-2 pr-6 pl-2 py-1 rounded bg-ter text-sec">Breath</button>
-        </li>
-      </ul>
+        <ul className="space-y-2 pl-1">
+          <li>
+            <button className="ml-2 pr-6 pl-2 py-1 rounded bg-ter text-sec">Rhythm</button>
+          </li>
+          <li>
+            <button className="ml-2 pr-6 pl-2 py-1 rounded bg-ter text-sec">Breath</button>
+          </li>
+        </ul>
       </>
+      <VolumeSlider onChange={handleVolumeChange} value={-1} />
     </div>
   );
 };

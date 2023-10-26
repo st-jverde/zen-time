@@ -8,15 +8,45 @@ const Main = ({ selectedTime }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
-  const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
+  const [BPM, setBPM] = useState(30);
 
-  const breathSamples = ["breath-1", "breath-2"];
+
+  const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
 
   const breathSampleIndex = useRef(0);
   const drumSampleIndex = useRef(0);
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
+
+  let intervalId = useRef(null); // ID of the interval to clear it later
+
+  const adjustBPM = () => {
+    let currentBPM = BPM;
+    // totalBPMChange = 20; // Change BPM from start 30 to 10
+    const durationInSeconds = selectedTime * 60;
+    const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
+    
+    intervalId.current = setInterval(() => {
+      setBPM((prevBPM) => {
+        currentBPM = prevBPM - decreaseRate;
+        if (currentBPM <= 10) {
+          console.log(breathLoopRef.current, drumLoopRef.current);
+          clearInterval(intervalId.current);
+          return 10;
+        }
+        return currentBPM;
+      });
+
+      // Update Tone.Transport's BPM
+      Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
+    }, 1000);
+  };
+
+  const getPlaybackRate = (currentBPM) => {
+    return currentBPM / 30; // Assuming 30 BPM is the original BPM for your samples
+  };
+  
 
   useEffect(() => {
     setCountdown(selectedTime * 60);
@@ -42,6 +72,8 @@ const Main = ({ selectedTime }) => {
           await loadAudio("endGong", "/samples/ZT-end-gong.mp3");
           await loadAudio("breath-1", "/samples/breath-1.mp3");
           await loadAudio("breath-2", "/samples/breath-2.mp3");
+          await loadAudio("breath-3", "/samples/breath-3.mp3");
+          await loadAudio("breath-4", "/samples/breath-4.mp3");
           await loadAudio("ZT-sha-L", "/samples/ZT-sha-L.mp3");
           await loadAudio("ZT-sha-R", "/samples/ZT-sha-R.mp3");
           setAudioReady(true);
@@ -54,21 +86,16 @@ const Main = ({ selectedTime }) => {
 
   const initiateLoops = () => {
     breathLoopRef.current = new Tone.Loop((time) => {
-        // Play the current breath sample
-        playSample(breathSamples[breathSampleIndex.current]);
-
-        // Update the breath sample index
-        breathSampleIndex.current = (breathSampleIndex.current + 1) % breathSamples.length;
-
+      const rate = getPlaybackRate(BPM);
+      playSample(breathSamples[breathSampleIndex.current], rate);
+      breathSampleIndex.current = (breathSampleIndex.current + 1) % breathSamples.length;
     }, "2n").start();
 
     drumLoopRef.current = new Tone.Loop((time) => {
-        // Play the current drum sample
-        playSample(drumSamples[drumSampleIndex.current]);
-
-        // Update the drum sample index
-        drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
-    }, "4n").start();
+      const rate = getPlaybackRate(BPM);
+      playSample(drumSamples[drumSampleIndex.current], rate);
+      drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
+    }, "8n").start();
   };
 
   const cleanupLoops = () => {
@@ -93,9 +120,6 @@ const stopAndDisposeLoops = () => {
     drumSampleIndex.current = 0;
 };
 
-
-  const BPM = 23;
-
   const toggleTimer = async () => {
     if (Tone && Tone.context && Tone.context.state !== 'running') {
       try {
@@ -109,13 +133,16 @@ const stopAndDisposeLoops = () => {
     setIsRunning(!isRunning);
 
     if (!isRunning) {
+      adjustBPM(); // start BPM adjustment
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
+      console.log(BPM);
       playSample("startGong");
-      const delayStart = setTimeout(() => initiateLoops(), 6000);
+      const delayStart = setTimeout(() => initiateLoops(), 2000);
       Tone.Transport.start();
 
       return () => clearTimeout(delayStart);
     } else {
+      clearInterval(intervalId.current);
       cleanupLoops();
       Tone.Transport.stop();
     }
@@ -124,12 +151,18 @@ const stopAndDisposeLoops = () => {
   const resetTimer = () => {
     setIsRunning(false);
     setCountdown(selectedTime * 60);
+    cleanupLoops();
+    clearInterval(intervalId.current);
+    setBPM(30);
+    Tone.Transport.stop();
   };
 
-  const stopAndDisposeLoops = () => {
-    clearInterval(sampleLoopRef.current?.breathInterval);
-    clearInterval(sampleLoopRef.current?.drumInterval);
-  };
+  // cleanup on component unmount
+  useEffect(() => {
+    return () => {
+        clearInterval(intervalId.current);
+    };
+}, []);
 
   useEffect(() => {
     if (countdown === 4) stopAndDisposeLoops();
@@ -139,22 +172,17 @@ const stopAndDisposeLoops = () => {
     if (countdown === 0) {
       playSample("endGong", 1);
       stopAndDisposeLoops();
+      clearInterval(intervalId.current);
 
       const autoReset = setTimeout(() => {
         setIsRunning(false);
         setCountdown(selectedTime * 60);
+        setBPM(30);
       }, 10000);
 
       return () => clearTimeout(autoReset);
     }
   }, [countdown]);
-
-  // Handler for when the global volume slider changes
-  const handleGlobalVolumeChange = (event) => {
-    const volumeValue = event.target.value;
-    setGlobalVolume(volumeValue);
-    setGlobalVolume(volumeValue); // from audio.js
-  };
 
   return (
     <div className="flex-1 ml-64 bg-dark flex items-center justify-center">
@@ -172,6 +200,8 @@ const stopAndDisposeLoops = () => {
                   initializeAudio("endGong"),
                   initializeAudio("breath-1"),
                   initializeAudio("breath-2"),
+                  initializeAudio("breath-3"),
+                  initializeAudio("breath-4"),
                   initializeAudio("ZT-sha-L"),
                   initializeAudio("ZT-sha-R")
                 ])
@@ -202,13 +232,7 @@ const stopAndDisposeLoops = () => {
             >
               Reset
             </button>
-            {/* {<input 
-              type="range" 
-              min="-30" 
-              max="0" 
-              value={globalVolume} 
-              onChange={handleGlobalVolumeChange} 
-            />} */}
+            <p className='px-4 text-sec'>{BPM}</p>
           </>
         )}
       </div>
