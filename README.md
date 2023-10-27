@@ -1,14 +1,14 @@
 # Zen Time: Meditation Timer 🧘‍♂️
 
-Zen Time is a simple meditation timer application, designed to offer a seamless meditation experience. It's using React, complemented by Tailwind CSS and the audio capabilities of Tone.js.
+Zen Time is a simple meditation timer application designed to offer an audio guided meditation experience. It is built using React, Tailwind CSS and the audio capabilities of Tone.js.
 
 ## WELCOME
 
-Zen Time is a meditation timer with sound. First, select the preferred time you want to meditate. Upon pressing "Start", the timer begins its countdown. As it runs, you'll be greeted with calming sounds that aim to guide you into a deep state of meditation. These sounds are crafted to help you calm down and drift off. As time progresses, the sounds slow down, creating an ambiance that feels more distant and peaceful.
+Zen Time integrates sound with your meditation. Begin by selecting your desired meditation duration. Once you press "Start", the timer initiates its countdown. As it progresses, you'll be enveloped by calming sounds specifically designed to guide you into a deep state of meditation. These auditory cues not only help you relax and drift off, but they also evolve as your session continues. Over time, the sounds slow down and resonate as if they're gradually becoming distant, fostering a peaceful ambiance.
 
-We hope that Zen Time brings tranquility and focus to your meditation practices. 🙏
+We sincerely hope Zen Time enhances tranquility and peace during your meditation sessions. 🙏
 
 ## Features
 
-- **Timer Selection**: Choose how long you wish to meditate.
-- **Calming Sounds**: Provides an guiding audio experience.
+- **Timer Selection**: Specify your desired meditation duration.
+- **Calming Sounds**: Delivers a guiding audio experience.
