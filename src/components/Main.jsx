@@ -15,6 +15,8 @@ const Main = ({ selectedTime }) => {
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
+  const [wetLevel, setWetLevel] = useState(0);
+  const [filterLevel, setFilterLevel] = useState(60);
 
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
@@ -27,29 +29,64 @@ const Main = ({ selectedTime }) => {
 
   let intervalId = useRef(null); // ID of the interval to clear it later
 
-  const adjustBPM = () => {
+  const adjustEffects = () => {
+    //BPM
     let currentBPM = BPM;
     // totalBPMChange = 20; // Change BPM from start 30 to 10
     const durationInSeconds = selectedTime * 60;
     const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
-    
+
+    // Filter
+    let currentFilter = filterLevel;
+
+    // Update filter frequency based on the remaining time
+    const filterIncrease = (1000 - 60) / durationInSeconds; // Going from 60hz to 20kHz
+
+    //Reverb
+    let currentWetLevel = wetLevel;
+    // Calculate the increase per second based on the selected time
+    const increasePerSecond = 1 / durationInSeconds
+    // Calculate the current wet level based on the elapsed time
+
     intervalId.current = setInterval(() => {
+
+      setFilterLevel((prevFilterLevel) => {
+        currentFilter = prevFilterLevel + filterIncrease;
+        if (currentFilter >= 20000) {
+          clearInterval(intervalId.current);
+          return 20000;
+        }
+        return currentFilter;
+      })
+
+      setWetLevel((prevWetLevel) => {
+        currentWetLevel = prevWetLevel + increasePerSecond;
+        if (currentWetLevel >= 1) {
+          clearInterval(intervalId.current);
+          return 1;
+        }
+        return currentWetLevel
+      })
+
       setBPM((prevBPM) => {
         currentBPM = prevBPM - decreaseRate;
         if (currentBPM <= 10) {
-          console.log(breathLoopRef.current, drumLoopRef.current);
           clearInterval(intervalId.current);
           return 10;
         }
         return currentBPM;
       });
 
-      // Update filter frequency based on the remaining time
-      const filterIncrease = (20000 - 1000) / durationInSeconds; // Going from 60hz to 20kHz
-      increaseFilterFrequency(filterIncrease * (durationInSeconds - countdown));
-      // Increase reverb wet level based on remaining time
-      const elapsedFraction = 1 - (countdown / (selectedTime * 60));
-      setReverbWetLevel(elapsedFraction);
+      console.log("filterIncrease: ", filterIncrease);
+      console.log("currentFilter: ", currentFilter);
+      increaseFilterFrequency(currentFilter);
+
+      // console.log("countdown: ", countdown);
+      // console.log("durationInSeconds: ", durationInSeconds);
+      // console.log("increasePerSecond: ", increasePerSecond);
+      // console.log("elapsedTime: ", elapsedTime);
+      console.log("wetLevel: ", currentWetLevel);
+      setReverbWetLevel(currentWetLevel);
 
       // Update Tone.Transport's BPM
       Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
@@ -147,10 +184,9 @@ const toggleTimer = async () => {
   }
   setIsRunning(!isRunning);
   if (!isRunning) {
-    adjustBPM(); // start BPM adjustment
+    adjustEffects(); // start BPM adjustment
 
     Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
-    console.log(BPM);
     playSample("startGong");
     const delayStart = setTimeout(() => initiateLoops(), 2000);
     Tone.Transport.start();
@@ -167,6 +203,8 @@ const resetTimer = () => {
   cleanupLoops();
   clearInterval(intervalId.current);
   setBPM(30);
+  setFilterLevel(60);
+  setWetLevel(0);
   Tone.Transport.stop();
 };
 // cleanup on component unmount
@@ -190,6 +228,8 @@ useEffect(() => {
         setIsRunning(false);
         setCountdown(selectedTime * 60);
         setBPM(30);
+        setFilterLevel(60);
+        setWetLevel(0);
       }, 10000);
 
       return () => clearTimeout(autoReset);

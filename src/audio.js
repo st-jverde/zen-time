@@ -23,25 +23,29 @@ export const initializeAudio = async (sampleName, highpassEffect, reverbEffect) 
             await getContext().resume();
         }
 
+        // Create highpass filter
+        highpass = new Tone.Filter(60, "highpass") // Start at 60Hz
+
+        // Create and configure reverb effect
+        reverb = new Tone.Reverb(4)
+        await reverb.generate();
+
         if (!players[sampleName] && audioBuffers[sampleName]) {
-            players[sampleName] = new Player(audioBuffers[sampleName]).toDestination();
+            players[sampleName] = new Player(audioBuffers[sampleName])
             players[sampleName].playbackRate = 1;
+
+            players[sampleName].connect(highpass);
+            highpass.connect(reverb);
+            reverb.toDestination();
+
         } else if (!audioBuffers[sampleName]) {
             console.error(`Audio buffer for ${sampleName} is not loaded.`);
         }
 
-        // Create and configure reverb effect
-        reverb = new Tone.Reverb().toDestination();
-        reverb.decay = 1.5; // You can adjust the decay as needed
-        await reverb.generate();
-
-        // Create highpass filter
-        highpass = new Tone.Filter(100, "highpass").connect(reverb); // Start at 100Hz
-
-        // Connect the player to the highpass filter (and thus through to the reverb)
-        if (players[sampleName]) {
-            players[sampleName].connect(highpass);
-        }
+        // // Connect the player to the highpass filter (and thus through to the reverb)
+        // if (players[sampleName]) {
+        //     players[sampleName].connect(highpass);
+        // }
 
     } catch (error) {
         console.error(`Error initializing audio for ${sampleName}:`, error);
@@ -61,7 +65,7 @@ export const increaseFilterFrequency = (value) => {
 // Utility function to set reverb wet level (0 is dry, 1 is fully wet)
 export const setReverbWetLevel = (value) => {
     if (reverb) {
-        reverb.wet.value = value;
+        reverb.wet.value = Math.min(Math.max(value, 0), 1);
     } else {
         console.error('Reverb not initialized');
     }
@@ -88,7 +92,6 @@ export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
 
 // Utility to set global volume
 export const setGlobalVolume = (volumeValue) => {
-    console.log('Setting Volume:', volumeValue);
     Tone.Destination.volume.value = volumeValue;
 };
   
