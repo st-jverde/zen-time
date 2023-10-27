@@ -1,7 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     mode: 'development',  // Setting mode to 'development'
@@ -21,12 +20,6 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
           template: './index.html'
-        }),
-        process.env.NODE_ENV === 'development' && new ReactRefreshWebpackPlugin(),
-        new CopyPlugin({
-          patterns: [
-            { from: '_redirects', to: '_redirects', toType: 'file' },
-          ],
         }),
     ].filter(Boolean),
     module: {

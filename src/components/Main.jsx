@@ -190,14 +190,14 @@ const Main = ({ selectedTime }) => {
     // This function will help us chain our promises for each audio load
     const loadAllAudios = async () => {
       try {
-          await loadAudio("startGong", "samples/ZT-start-gong.mp3");
-          await loadAudio("endGong", "samples/ZT-end-gong.mp3");
-          await loadAudio("breath-1", "samples/breath-1.mp3");
-          await loadAudio("breath-2", "samples/breath-2.mp3");
-          await loadAudio("breath-3", "samples/breath-3.mp3");
-          await loadAudio("breath-4", "samples/breath-4.mp3");
-          await loadAudio("ZT-sha-L", "samples/ZT-sha-L.mp3");
-          await loadAudio("ZT-sha-R", "samples/ZT-sha-R.mp3");
+          await loadAudio("startGong", "/dist/samples/ZT-start-gong.mp3");
+          await loadAudio("endGong", "/dist/samples/ZT-end-gong.mp3");
+          await loadAudio("breath-1", "/dist/samples/breath-1.mp3");
+          await loadAudio("breath-2", "/dist/samples/breath-2.mp3");
+          await loadAudio("breath-3", "/dist/samples/breath-3.mp3");
+          await loadAudio("breath-4", "/dist/samples/breath-4.mp3");
+          await loadAudio("ZT-sha-L", "/dist/samples/ZT-sha-L.mp3");
+          await loadAudio("ZT-sha-R", "/dist/samples/ZT-sha-R.mp3");
           setAudioReady(true);
       } catch (error) {
           console.error('Failed to load audio:', error);
