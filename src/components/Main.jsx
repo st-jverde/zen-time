@@ -1,15 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
-import { loadAudio, initializeAudio, playSample } from '../audio';
+import { 
+  loadAudio, 
+  initializeAudio, 
+  playSample,
+  increaseFilterFrequency,
+  setReverbWetLevel 
+} from '../audio';
 import '../tailwind.css';
 
 const Main = ({ selectedTime }) => {
+  // Initial State & Refs
   const [countdown, setCountdown] = useState(selectedTime * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
-
+  const [wetLevel, setWetLevel] = useState(0);
+  const [filterLevel, setFilterLevel] = useState(100);
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
@@ -21,52 +29,157 @@ const Main = ({ selectedTime }) => {
 
   let intervalId = useRef(null); // ID of the interval to clear it later
 
-  const adjustBPM = () => {
+  // Utility & Helper Functions
+  const getPlaybackRate = (currentBPM) => {
+    return currentBPM / 30; // Assuming 30 BPM is the original BPM for your samples
+  };
+
+  const adjustEffects = () => {
+    //BPM
     let currentBPM = BPM;
     // totalBPMChange = 20; // Change BPM from start 30 to 10
     const durationInSeconds = selectedTime * 60;
     const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
-    
+
+    const halfTime = (durationInSeconds / 2) * 1000;
+
+    // Filter
+    let currentFilter = filterLevel;
+
+    // Update filter frequency based on the remaining time
+    const filterIncrease = (6000 - currentFilter) / (durationInSeconds / 2); // Going from 100hz to 6000hz
+
+    //Reverb
+    let currentWetLevel = wetLevel;
+    // Calculate the increase per second based on the selected time
+    const increasePerSecond = 1 / durationInSeconds
+    // Calculate the current wet level based on the elapsed time
+
     intervalId.current = setInterval(() => {
+
+      setTimeout(() => {
+        setFilterLevel((prevFilterLevel) => {
+          currentFilter = prevFilterLevel + filterIncrease;
+          if (currentFilter >= 6000) {
+            clearInterval(intervalId.current);
+            return 6000;
+          }
+          return currentFilter;
+        })
+      }, halfTime);
+
+      setWetLevel((prevWetLevel) => {
+        currentWetLevel = prevWetLevel + increasePerSecond;
+        if (currentWetLevel >= 1) {
+          clearInterval(intervalId.current);
+          return 1;
+        }
+        return currentWetLevel
+      })
+
       setBPM((prevBPM) => {
         currentBPM = prevBPM - decreaseRate;
         if (currentBPM <= 10) {
-          console.log(breathLoopRef.current, drumLoopRef.current);
           clearInterval(intervalId.current);
           return 10;
         }
         return currentBPM;
       });
 
+      console.log("filterIncrease: ", filterIncrease);
+      console.log("currentFilter: ", currentFilter);
+      increaseFilterFrequency(currentFilter);
+
+      console.log("wetLevel: ", currentWetLevel);
+      setReverbWetLevel(currentWetLevel);
+
       // Update Tone.Transport's BPM
       Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
     }, 1000);
+  }; 
+  
+  const initiateLoops = () => {
+    breathLoopRef.current = new Tone.Loop((time) => {
+      const rate = getPlaybackRate(BPM);
+
+      playSample(breathSamples[breathSampleIndex.current], rate);
+
+      breathSampleIndex.current = (breathSampleIndex.current + 1) % breathSamples.length;
+    }, "2n").start();
+
+    drumLoopRef.current = new Tone.Loop((time) => {
+      const rate = getPlaybackRate(BPM);
+      playSample(drumSamples[drumSampleIndex.current], rate);
+
+      drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
+    }, "8n").start();
   };
 
-  const getPlaybackRate = (currentBPM) => {
-    return currentBPM / 30; // Assuming 30 BPM is the original BPM for your samples
+  const cleanupLoops = () => {
+    breathLoopRef.current?.stop(0);
+    drumLoopRef.current?.stop(0);
+    breathSampleIndex.current = 0;
+    drumSampleIndex.current = 0;
   };
-  
-  // SET SELECTED TIME IN TIMER
+
+  const stopAndDisposeLoops = () => {
+    if (breathLoopRef.current) {
+      breathLoopRef.current.stop(0);
+      breathLoopRef.current.dispose();
+      breathLoopRef.current = null; 
+    }
+    if (drumLoopRef.current) {
+      drumLoopRef.current.stop(0);
+      drumLoopRef.current.dispose();
+      drumLoopRef.current = null;
+    }
+    breathSampleIndex.current = 0;
+    drumSampleIndex.current = 0;
+  };
+
+  const toggleTimer = async () => {
+    if (Tone && Tone.context && Tone.context.state !== 'running') {
+      try {
+        await Tone.context.resume();
+      } catch (error) {
+        console.error("Failed to resume the Tone audio context:", error);
+        return;
+      }
+    }
+    setIsRunning(!isRunning);
+    if (!isRunning) {
+      adjustEffects(); // start BPM adjustment
+
+      Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
+      playSample("startGong");
+      const delayStart = setTimeout(() => initiateLoops(), 2000);
+      Tone.Transport.start();
+      return () => clearTimeout(delayStart);
+    } else {
+      clearInterval(intervalId.current);
+      cleanupLoops();
+      Tone.Transport.stop();
+    }
+  };
+
+  const resetTimer = () => {
+    setIsRunning(false);
+    setCountdown(selectedTime * 60);
+    cleanupLoops();
+    clearInterval(intervalId.current);
+    setBPM(30);
+    setFilterLevel(60);
+    setWetLevel(0);
+    Tone.Transport.stop();
+  };
+
+  // useEffect Hooks
   useEffect(() => {
     setCountdown(selectedTime * 60);
   }, [selectedTime]);
 
-  // TIMER COUNTDOWN
   useEffect(() => {
-    let timer;
-    if (isRunning && countdown > 0) {
-        timer = setInterval(() => {
-            setCountdown((prevCountdown) => prevCountdown - 1);
-        }, 1000);
-    } else {
-        setIsRunning(false);
-    }
-    return () => clearInterval(timer);
-  }, [isRunning, countdown]);
-
-  // LOAD ALL AUDIO FILES
-  useEffect(() => {
+    // This function will help us chain our promises for each audio load
     const loadAllAudios = async () => {
       try {
           await loadAudio("startGong", "/samples/ZT-start-gong.mp3");
@@ -85,80 +198,23 @@ const Main = ({ selectedTime }) => {
     loadAllAudios();
   }, []);
 
-  // SAMPLES THAT LOOP / LOOP FUNCTIONALITY
-  const initiateLoops = () => {
-    breathLoopRef.current = new Tone.Loop((time) => {
-      const rate = getPlaybackRate(BPM);
-      playSample(breathSamples[breathSampleIndex.current], rate);
-      breathSampleIndex.current = (breathSampleIndex.current + 1) % breathSamples.length;
-    }, "2n").start();
-
-    drumLoopRef.current = new Tone.Loop((time) => {
-      const rate = getPlaybackRate(BPM);
-      playSample(drumSamples[drumSampleIndex.current], rate);
-      drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
-    }, "8n").start();
-  };
-
-  const cleanupLoops = () => {
-    breathLoopRef.current?.stop(0);
-    drumLoopRef.current?.stop(0);
-    breathSampleIndex.current = 0;
-    drumSampleIndex.current = 0;
-};
-
-const stopAndDisposeLoops = () => {
-    if (breathLoopRef.current) {
-      breathLoopRef.current.stop(0);
-      breathLoopRef.current.dispose();
-      breathLoopRef.current = null; 
+  useEffect(() => {
+    let timer;
+    if (isRunning && countdown > 0) {
+        timer = setInterval(() => {
+            setCountdown((prevCountdown) => prevCountdown - 1);
+        }, 1000);
+    } else {
+        setIsRunning(false);
     }
-    if (drumLoopRef.current) {
-      drumLoopRef.current.stop(0);
-      drumLoopRef.current.dispose();
-      drumLoopRef.current = null;
-    }
-    breathSampleIndex.current = 0;
-    drumSampleIndex.current = 0;
-};
+    return () => clearInterval(timer);
+  }, [isRunning, countdown]);
 
-const toggleTimer = async () => {
-  if (Tone && Tone.context && Tone.context.state !== 'running') {
-    try {
-      await Tone.context.resume();
-    } catch (error) {
-      console.error("Failed to resume the Tone audio context:", error);
-      return;
-    }
-  }
-  setIsRunning(!isRunning);
-  if (!isRunning) {
-    adjustBPM(); // start BPM adjustment
-    Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
-    console.log(BPM);
-    playSample("startGong");
-    const delayStart = setTimeout(() => initiateLoops(), 2000);
-    Tone.Transport.start();
-    return () => clearTimeout(delayStart);
-  } else {
-    clearInterval(intervalId.current);
-    cleanupLoops();
-    Tone.Transport.stop();
-  }
-};
-const resetTimer = () => {
-  setIsRunning(false);
-  setCountdown(selectedTime * 60);
-  cleanupLoops();
-  clearInterval(intervalId.current);
-  setBPM(30);
-  Tone.Transport.stop();
-};
-// cleanup on component unmount
+// Clears the interval (identified by intervalId.current) to prevent memory leaks upon component unmount.
 useEffect(() => {
-    return () => {
-        clearInterval(intervalId.current);
-    };
+  return () => {
+      clearInterval(intervalId.current);
+  };
 }, []);
 
   useEffect(() => {
@@ -175,6 +231,8 @@ useEffect(() => {
         setIsRunning(false);
         setCountdown(selectedTime * 60);
         setBPM(30);
+        setFilterLevel(60);
+        setWetLevel(0);
       }, 10000);
 
       return () => clearTimeout(autoReset);
@@ -188,7 +246,18 @@ useEffect(() => {
           <>
             {/* Initialize Audio UI */}
             <div className="text-9xl mb-6">
-              <h1 className='text-main'>Welcome</h1>
+              <h1 className='text-main'>WELCOME</h1>
+              <div className='text-sec text-base'>
+                <p>
+                  Zen Time is a meditation timer with sound.<br />
+                  First select the prevered time you want to meditate.<br />
+                  When you press "Start", the the timer will start counting down.<br />
+                  You'll hear sounds that will guide you in your meditation.<br />
+                  They will help you calm down, drift off.<br />
+                  Over time te sounds slow down and seem to become more distant.<br /> 
+                </p>
+              </div>
+              <h2 className='text-main text-base'>I hope you enjoy 🙏</h2>
             </div>
             <button
               onClick={() => {
