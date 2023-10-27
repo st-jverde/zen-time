@@ -2,13 +2,15 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 module.exports = {
-    mode: 'development',  // Setting mode to 'development'
+    mode: isDevelopment ? 'development' : 'production',
     entry: './src/index.jsx',
     output: {
-        filename: 'bundle.js',
+        filename: isDevelopment ? 'bundle.js' : 'bundle.[contenthash].js',
         path: path.resolve(__dirname, 'dist'),
-        publicPath: '/zen-time'
+        publicPath: isDevelopment ? '/zen-time' : '/',
     },
     target: 'web',
     devServer: {
@@ -21,7 +23,13 @@ module.exports = {
         new HtmlWebpackPlugin({
           template: './index.html'
         }),
+        isDevelopment && new ReactRefreshWebpackPlugin(),
     ].filter(Boolean),
+    optimization: isDevelopment ? {} : {
+        splitChunks: {
+            chunks: 'all',
+        },
+    },
     module: {
       rules: [
         {

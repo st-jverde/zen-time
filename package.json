@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "homepage": "https://st-jverde.github.io/zen-time/",
+  "homepage": "https://zen-time.netlify.app/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --open --hot",
-    "build": "cross-env NODE_ENV=production webpack --mode production"
+    "start": "NODE_ENV=development webpack-dev-server --open --hot",
+    "build": "NODE_ENV=production webpack --config webpack.config.js"
   },
   "keywords": [],
   "author": "",
