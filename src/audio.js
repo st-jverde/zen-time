@@ -15,7 +15,7 @@ export const loadAudio = async (sampleName, url) => {
     }
 };
 
-export const initializeAudio = async (sampleName, highpassEffect, reverbEffect) => {
+export const initializeAudio = async (sampleName) => {
     try {
         await start();
         
@@ -34,18 +34,20 @@ export const initializeAudio = async (sampleName, highpassEffect, reverbEffect) 
             players[sampleName] = new Player(audioBuffers[sampleName])
             players[sampleName].playbackRate = 1;
 
-            players[sampleName].connect(highpass);
-            highpass.connect(reverb);
-            reverb.toDestination();
+            // Ensure the sample is disconnected from any nodes it might be connected to
+            // players[sampleName].disconnect();
+
+            if (sampleName === "endGong") {
+                players[sampleName].toDestination();
+            } else {
+                players[sampleName].connect(highpass);
+                highpass.connect(reverb);
+                reverb.toDestination();
+            }
 
         } else if (!audioBuffers[sampleName]) {
             console.error(`Audio buffer for ${sampleName} is not loaded.`);
         }
-
-        // // Connect the player to the highpass filter (and thus through to the reverb)
-        // if (players[sampleName]) {
-        //     players[sampleName].connect(highpass);
-        // }
 
     } catch (error) {
         console.error(`Error initializing audio for ${sampleName}:`, error);
