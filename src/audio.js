@@ -27,7 +27,7 @@ export const initializeAudio = async (sampleName) => {
         highpass = new Tone.Filter(60, "highpass") // Start at 60Hz
 
         // Create and configure reverb effect
-        reverb = new Tone.Reverb(4)
+        reverb = new Tone.Reverb(6)
         await reverb.generate();
 
         if (!players[sampleName] && audioBuffers[sampleName]) {

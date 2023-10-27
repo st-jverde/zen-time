@@ -17,7 +17,7 @@ const Main = ({ selectedTime }) => {
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
   const [wetLevel, setWetLevel] = useState(0);
-  const [filterLevel, setFilterLevel] = useState(100);
+  const [filterLevel, setFilterLevel] = useState(200);
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
@@ -41,13 +41,16 @@ const Main = ({ selectedTime }) => {
     const durationInSeconds = selectedTime * 60;
     const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
 
-    const halfTime = (durationInSeconds / 2) * 1000;
+    // Variable for when you want to start it halfway the selected time
+    // const halfTime = (durationInSeconds / 2) * 1000;
+    const quarterTime = (durationInSeconds / 4) * 1000;
 
     // Filter
     let currentFilter = filterLevel;
 
     // Update filter frequency based on the remaining time
-    const filterIncrease = (6000 - currentFilter) / (durationInSeconds / 2); // Going from 100hz to 6000hz
+    const filterIncrease = (5000 - currentFilter) / durationInSeconds; // Going from 100hz to 5000hz
+    // const filterIncrease = (6000 - currentFilter) / (durationInSeconds / 2); // Going from 100hz to 6000hz
 
     //Reverb
     let currentWetLevel = wetLevel;
@@ -57,16 +60,21 @@ const Main = ({ selectedTime }) => {
 
     intervalId.current = setInterval(() => {
 
+      // setFilterLevel((prevFilterLevel) => {
+      //   currentFilter = prevFilterLevel + filterIncrease;
+      //   if (currentFilter >= 6000) {
+      //     clearInterval(intervalId.current);
+      //     return 6000;
+      //   }
+      //   return currentFilter;
+      // })
+
+      // **** START FILTER AT 50% OF SELECTED TIME ****
       setTimeout(() => {
         setFilterLevel((prevFilterLevel) => {
           currentFilter = prevFilterLevel + filterIncrease;
-          if (currentFilter >= 6000) {
-            clearInterval(intervalId.current);
-            return 6000;
-          }
-          return currentFilter;
         })
-      }, halfTime);
+      }, quarterTime);
 
       setWetLevel((prevWetLevel) => {
         currentWetLevel = prevWetLevel + increasePerSecond;
@@ -182,8 +190,8 @@ const Main = ({ selectedTime }) => {
     // This function will help us chain our promises for each audio load
     const loadAllAudios = async () => {
       try {
-          await loadAudio("startGong", "/samples/ZT-start-gong.mp3");
-          await loadAudio("endGong", "/samples/ZT-end-gong.mp3");
+          await loadAudio("startGong", "https://github.com/st-jverde/zen-time/blob/3b96bdeb2a77151089cc0ce1568dbb50da57a927/dist/samples/ZT-start-gong.mp3");
+          await loadAudio("endGong", "https://github.com/st-jverde/zen-time/blob/3b96bdeb2a77151089cc0ce1568dbb50da57a927/dist/samples/ZT-end-gong.mp3");
           await loadAudio("breath-1", "/samples/breath-1.mp3");
           await loadAudio("breath-2", "/samples/breath-2.mp3");
           await loadAudio("breath-3", "/samples/breath-3.mp3");
@@ -298,7 +306,7 @@ useEffect(() => {
             >
               Reset
             </button>
-            <p className='px-4 text-sec'>{BPM}</p>
+            {/* {<p className='px-4 text-sec'>{BPM}</p>} */}
           </>
         )}
       </div>
