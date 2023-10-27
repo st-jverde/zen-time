@@ -190,14 +190,14 @@ const Main = ({ selectedTime }) => {
     // This function will help us chain our promises for each audio load
     const loadAllAudios = async () => {
       try {
-          await loadAudio("startGong", "https://github.com/st-jverde/zen-time/blob/3b96bdeb2a77151089cc0ce1568dbb50da57a927/dist/samples/ZT-start-gong.mp3");
-          await loadAudio("endGong", "https://github.com/st-jverde/zen-time/blob/3b96bdeb2a77151089cc0ce1568dbb50da57a927/dist/samples/ZT-end-gong.mp3");
-          await loadAudio("breath-1", "/samples/breath-1.mp3");
-          await loadAudio("breath-2", "/samples/breath-2.mp3");
-          await loadAudio("breath-3", "/samples/breath-3.mp3");
-          await loadAudio("breath-4", "/samples/breath-4.mp3");
-          await loadAudio("ZT-sha-L", "/samples/ZT-sha-L.mp3");
-          await loadAudio("ZT-sha-R", "/samples/ZT-sha-R.mp3");
+          await loadAudio("startGong", "samples/ZT-start-gong.mp3");
+          await loadAudio("endGong", "samples/ZT-end-gong.mp3");
+          await loadAudio("breath-1", "samples/breath-1.mp3");
+          await loadAudio("breath-2", "samples/breath-2.mp3");
+          await loadAudio("breath-3", "samples/breath-3.mp3");
+          await loadAudio("breath-4", "samples/breath-4.mp3");
+          await loadAudio("ZT-sha-L", "samples/ZT-sha-L.mp3");
+          await loadAudio("ZT-sha-R", "samples/ZT-sha-R.mp3");
           setAudioReady(true);
       } catch (error) {
           console.error('Failed to load audio:', error);
