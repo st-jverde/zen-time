@@ -9,14 +9,14 @@ import {
 } from '../audio';
 import '../tailwind.css';
 
-import startGong from './samples/ZT-start-gong.mp3';
-import endGong from './samples/ZT-end-gong.mp3';
-import breath1 from './samples/breath-1.mp3';
-import breath2 from './samples/breath-2.mp3';
-import breath3 from './samples/breath-3.mp3';
-import breath4 from './samples/breath-4.mp3';
-import ZTShaL from './samples/ZT-sha-L.mp3';
-import ZTShaR from './samples/ZT-sha-R.mp3';
+import startGong from '../samples/ZT-start-gong.mp3';
+import endGong from '../samples/ZT-end-gong.mp3';
+import breath1 from '../samples/breath-1.mp3';
+import breath2 from '../samples/breath-2.mp3';
+import breath3 from '../samples/breath-3.mp3';
+import breath4 from '../samples/breath-4.mp3';
+import ZTShaL from '../samples/ZT-sha-L.mp3';
+import ZTShaR from '../samples/ZT-sha-R.mp3';
 
 const Main = ({ selectedTime }) => {
   // Initial State & Refs
