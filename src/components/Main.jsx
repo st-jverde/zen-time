@@ -9,6 +9,15 @@ import {
 } from '../audio';
 import '../tailwind.css';
 
+import startGong from './samples/ZT-start-gong.mp3';
+import endGong from './samples/ZT-end-gong.mp3';
+import breath1 from './samples/breath-1.mp3';
+import breath2 from './samples/breath-2.mp3';
+import breath3 from './samples/breath-3.mp3';
+import breath4 from './samples/breath-4.mp3';
+import ZTShaL from './samples/ZT-sha-L.mp3';
+import ZTShaR from './samples/ZT-sha-R.mp3';
+
 const Main = ({ selectedTime }) => {
   // Initial State & Refs
   const [countdown, setCountdown] = useState(selectedTime * 60);
@@ -195,14 +204,14 @@ const Main = ({ selectedTime }) => {
     // This function will help us chain our promises for each audio load
     const loadAllAudios = async () => {
       try {
-          await loadAudio("startGong", "/samples/ZT-start-gong.mp3");
-          await loadAudio("endGong", "/samples/ZT-end-gong.mp3");
-          await loadAudio("breath-1", "/samples/breath-1.mp3");
-          await loadAudio("breath-2", "/samples/breath-2.mp3");
-          await loadAudio("breath-3", "/samples/breath-3.mp3");
-          await loadAudio("breath-4", "/samples/breath-4.mp3");
-          await loadAudio("ZT-sha-L", "/samples/ZT-sha-L.mp3");
-          await loadAudio("ZT-sha-R", "/samples/ZT-sha-R.mp3");
+          await loadAudio("startGong", startGong);
+          await loadAudio("endGong", endGong);
+          await loadAudio("breath-1", breath1);
+          await loadAudio("breath-2", breath2);
+          await loadAudio("breath-3", breath3);
+          await loadAudio("breath-4", breath4);
+          await loadAudio("ZT-sha-L", ZTShaL);
+          await loadAudio("ZT-sha-R", ZTShaR);
           setAudioReady(true);
       } catch (error) {
           console.error('Failed to load audio:', error);
