@@ -26,7 +26,7 @@ const Main = ({ selectedTime }) => {
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
   const [wetLevel, setWetLevel] = useState(0);
-  const [filterLevel, setFilterLevel] = useState(200);
+  const [filterLevel, setFilterLevel] = useState(250);
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
@@ -58,7 +58,7 @@ const Main = ({ selectedTime }) => {
     let currentFilter = filterLevel;
 
     // Update filter frequency based on the remaining time
-    const filterIncrease = (5000 - currentFilter) / durationInSeconds; // Going from 100hz to 5000hz
+    const filterIncrease = (5500 - currentFilter) / durationInSeconds; // Going from 100hz to 5000hz
     // const filterIncrease = (6000 - currentFilter) / (durationInSeconds / 2); // Going from 100hz to 6000hz
 
     //Reverb
