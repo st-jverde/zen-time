@@ -64,7 +64,14 @@ module.exports = {
                     }
                 }
             ]
-        }
+        },
+        {
+          test: /\.(mp3|wav)$/,
+          loader: 'file-loader',
+          options: {
+            name: 'samples/[name].[hash:8].[ext]',  // This will put the audio files in a 'samples' directory in the output folder with a content hash in their names.
+          },
+        },
       ]    
     },
     resolve: {
