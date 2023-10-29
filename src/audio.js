@@ -4,7 +4,7 @@ const { Player, start, getContext, Buffer } = Tone;
 
 const players = {};
 const audioBuffers = {};
-let reverb, highpass; 
+let reverb, highpassBreath; 
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -23,11 +23,14 @@ export const initializeAudio = async (sampleName) => {
             await getContext().resume();
         }
 
-        // Create highpass filter
-        highpass = new Tone.Filter(60, "highpass") // Start at 60Hz
+        //highpassDrum
+        highpassDrum = new Tone.Filter(60, "highpass")
+
+        // Create highpassBreath filter
+        highpassBreath = new Tone.Filter(200, "highpass") // Start at 200Hz
 
         // Create and configure reverb effect
-        reverb = new Tone.Reverb(6)
+        reverb = new Tone.Reverb(9)
         await reverb.generate();
 
         if (!players[sampleName] && audioBuffers[sampleName]) {
@@ -37,13 +40,28 @@ export const initializeAudio = async (sampleName) => {
             // Ensure the sample is disconnected from any nodes it might be connected to
             // players[sampleName].disconnect();
 
-            if (sampleName === "endGong") {
-                players[sampleName].toDestination();
-            } else {
-                players[sampleName].connect(highpass);
-                highpass.connect(reverb);
-                reverb.toDestination();
+            switch (sampleName) {
+                case ("breath-1" && "breath-2" && "breath-3" && "breath-4"):
+                    players[sampleName].connect(highpassBreath);
+                    highpass.connect(reverb);
+                    reverb.toDestination();
+                case ("ZT-sha-L" && "ZT-sha-R"):
+                    players[sampleName].connect(highpassDrum);
+                    highpass.connect(reverb);
+                    reverb.toDestination();
+                default:
+                    players[sampleName].connect(reverb);
+                    reverb.toDestination();
+                    break;
             }
+
+            // if (sampleName === "endGong") {
+            //     players[sampleName].toDestination();
+            // } else {
+            //     players[sampleName].connect(highpassBreath);
+            //     highpassBreath.connect(reverb);
+            //     reverb.toDestination();
+            // }
 
         } else if (!audioBuffers[sampleName]) {
             console.error(`Audio buffer for ${sampleName} is not loaded.`);
@@ -56,10 +74,18 @@ export const initializeAudio = async (sampleName) => {
 };
 
 // Utility function to increase the filter frequency
-export const increaseFilterFrequency = (value) => {
-    if (highpass) {
-        highpass.frequency.rampTo(value, 10); // 1 second ramp time, you can adjust
-    } else {
+export const increaseFilterBreathFrequency = (value) => {
+    if (highpassBreath) {
+        highpassBreath.frequency.rampTo(value, 1); // 1 second ramp time, you can adjust
+    }else {
+        console.error('Highpass filter not initialized');
+    }
+};
+
+export const increaseFilterDrumFrequency = (value) => {
+    if (highpassDrum) {
+        highpassDrum.frequency.rampTo(value, 1);
+    }else {
         console.error('Highpass filter not initialized');
     }
 };

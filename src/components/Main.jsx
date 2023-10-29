@@ -4,7 +4,8 @@ import {
   loadAudio, 
   initializeAudio, 
   playSample,
-  increaseFilterFrequency,
+  increaseFilterBreathFrequency,
+  increaseFilterDrumFrequency,
   setReverbWetLevel 
 } from '../audio';
 import '../tailwind.css';
@@ -25,8 +26,9 @@ const Main = ({ selectedTime }) => {
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
-  const [wetLevel, setWetLevel] = useState(0);
-  const [filterLevel, setFilterLevel] = useState(250);
+  const [wetLevel, setWetLevel] = useState(0.4);
+  const [filterLevelBreath, setFilterLevelBreath] = useState(250);
+  const [filterLevelDrum, setFilterLevelDrum] = useState(60);
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
@@ -50,16 +52,18 @@ const Main = ({ selectedTime }) => {
     const durationInSeconds = selectedTime * 60;
     const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
 
+   
+
+    // Filter Breath
+    let currentFilterBreath = filterLevelBreath;
+    let currentFilterDrum = filterLevelDrum;
     // Variable for when you want to start it halfway the selected time
-    // const halfTime = (durationInSeconds / 2) * 1000;
+    const halfTime = (durationInSeconds / 2) * 1000;
     const quarterTime = (durationInSeconds / 4) * 1000;
 
-    // Filter
-    let currentFilter = filterLevel;
-
     // Update filter frequency based on the remaining time
-    const filterIncrease = (5500 - currentFilter) / durationInSeconds; // Going from 100hz to 5000hz
-    // const filterIncrease = (6000 - currentFilter) / (durationInSeconds / 2); // Going from 100hz to 6000hz
+    const filterIncreaseBreath = (4000 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
+    const filterIncreaseDrum = (1000 - currentFilterBreath) / (durationInSeconds / 2); // Going from 100hz to 6000hz
 
     //Reverb
     let currentWetLevel = wetLevel;
@@ -67,28 +71,33 @@ const Main = ({ selectedTime }) => {
     const increasePerSecond = 1 / durationInSeconds
     // Calculate the current wet level based on the elapsed time
 
+    // ---- SET LEVELS --------
     intervalId.current = setInterval(() => {
 
-      // setFilterLevel((prevFilterLevel) => {
-      //   currentFilter = prevFilterLevel + filterIncrease;
-      //   if (currentFilter >= 6000) {
-      //     clearInterval(intervalId.current);
-      //     return 6000;
-      //   }
-      //   return currentFilter;
-      // })
-
-      // **** START FILTER AT 50% OF SELECTED TIME ****
+      // **** START FILTER AT 25% OF SELECTED TIME ****
+      // Filter Breath
       setTimeout(() => {
-        setFilterLevel((prevFilterLevel) => {
-          currentFilter = prevFilterLevel + filterIncrease;
-          if (currentFilter >= 6000) {
+        setFilterLevelBreath((prevFilterLevel) => {
+          currentFilterBreath = prevFilterLevel + filterIncreaseBreath;
+          if (currentFilterBreath >= 6500) {
             clearInterval(intervalId.current);
-            return 6000;
+            return 6500;
         }
-        return currentFilter;
+        return currentFilterBreath;
         })
       }, quarterTime);
+
+      // Filter Drum
+      setTimeout(() => {
+        setFilterLevelDrum((prevFilterLevel) => {
+          currentFilterDrum = prevFilterLevel + filterIncreaseDrum;
+          if (currentFilterDrum >= 5000) {
+            clearInterval(intervalId.current);
+            return 5000;
+        }
+        return currentFilterDrum;
+        })
+      }, halfTime);
 
       setWetLevel((prevWetLevel) => {
         currentWetLevel = prevWetLevel + increasePerSecond;
@@ -108,9 +117,13 @@ const Main = ({ selectedTime }) => {
         return currentBPM;
       });
 
-      console.log("filterIncrease: ", filterIncrease);
-      console.log("currentFilter: ", currentFilter);
-      increaseFilterFrequency(currentFilter);
+      console.log("filterIncreaseBreath: ", filterIncreaseBreath);
+      console.log("currentFilterBreath: ", currentFilterBreath);
+      increaseFilterBreathFrequency(currentFilterBreath);
+
+      console.log("filterIncreaseDrum: ", filterIncreaseDrum);
+      console.log("currentFilterDrum: ", currentFilterDrum);
+      increaseFilterDrumFrequency(currentFilterDrum);
 
       console.log("wetLevel: ", currentWetLevel);
       setReverbWetLevel(currentWetLevel);
