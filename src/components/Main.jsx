@@ -26,7 +26,7 @@ const Main = ({ selectedTime }) => {
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
-  const [wetLevel, setWetLevel] = useState(0.4);
+  const [wetLevel, setWetLevel] = useState(0);
   const [filterLevelBreath, setFilterLevelBreath] = useState(250);
   const [filterLevelDrum, setFilterLevelDrum] = useState(60);
 
@@ -203,7 +203,8 @@ const Main = ({ selectedTime }) => {
     cleanupLoops();
     clearInterval(intervalId.current);
     setBPM(30);
-    setFilterLevel(60);
+    setFilterLevelBreath(200);
+    setFilterLevelDrum(60);
     setWetLevel(0);
     Tone.Transport.stop();
   };
@@ -266,7 +267,8 @@ useEffect(() => {
         setIsRunning(false);
         setCountdown(selectedTime * 60);
         setBPM(30);
-        setFilterLevel(60);
+        setFilterLevelBreath(200);
+        setFilterLevelDrum(60);
         setWetLevel(0);
       }, 10000);
 

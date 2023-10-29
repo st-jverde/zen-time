@@ -20,10 +20,10 @@ module.exports = {
       historyApiFallback: true,
     },
     plugins: [
-        new HtmlWebpackPlugin({
-          template: './index.html'
-        }),
-        isDevelopment && new ReactRefreshWebpackPlugin(),
+      new HtmlWebpackPlugin({
+        template: './index.html'
+      }),
+      isDevelopment && new ReactRefreshWebpackPlugin(),
     ].filter(Boolean),
     optimization: isDevelopment ? {} : {
         splitChunks: {
