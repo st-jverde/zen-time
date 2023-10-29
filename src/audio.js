@@ -4,7 +4,7 @@ const { Player, start, getContext, Buffer } = Tone;
 
 const players = {};
 const audioBuffers = {};
-let reverb, highpassBreath; 
+let reverb, highpassBreath, highpassDrum; 
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -43,11 +43,11 @@ export const initializeAudio = async (sampleName) => {
             switch (sampleName) {
                 case ("breath-1" && "breath-2" && "breath-3" && "breath-4"):
                     players[sampleName].connect(highpassBreath);
-                    highpass.connect(reverb);
+                    highpassBreath.connect(reverb);
                     reverb.toDestination();
                 case ("ZT-sha-L" && "ZT-sha-R"):
                     players[sampleName].connect(highpassDrum);
-                    highpass.connect(reverb);
+                    highpassDrum.connect(reverb);
                     reverb.toDestination();
                 default:
                     players[sampleName].connect(reverb);
