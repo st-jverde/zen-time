@@ -38,22 +38,29 @@ export const initializeAudio = async (sampleName) => {
             players[sampleName].playbackRate = 1;
 
             // Ensure the sample is disconnected from any nodes it might be connected to
-            // players[sampleName].disconnect();
+            players[sampleName].disconnect();
 
             switch (sampleName) {
-                case ("breath-1" && "breath-2" && "breath-3" && "breath-4"):
+                case "breath-1":
+                case "breath-2":
+                case "breath-3":
+                case "breath-4":
                     players[sampleName].connect(highpassBreath);
                     highpassBreath.connect(reverb);
                     reverb.toDestination();
-                case ("ZT-sha-L" && "ZT-sha-R"):
+                    break;
+                case "ZT-sha-L":
+                case "ZT-sha-R":
                     players[sampleName].connect(highpassDrum);
                     highpassDrum.connect(reverb);
                     reverb.toDestination();
+                    break;
                 default:
                     players[sampleName].connect(reverb);
                     reverb.toDestination();
                     break;
             }
+            
 
             // if (sampleName === "endGong") {
             //     players[sampleName].toDestination();

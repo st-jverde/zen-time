@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const webpack = require('webpack');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -11,7 +12,7 @@ module.exports = {
     output: {
         filename: isDevelopment ? 'bundle.js' : 'bundle.[contenthash].js',
         path: path.resolve(__dirname, 'dist'),
-        publicPath: isDevelopment ? '/zen-time' : '/',
+        publicPath: isDevelopment ? '' : '/',
     },
     target: 'web',
     devServer: {
@@ -22,10 +23,16 @@ module.exports = {
     },
     plugins: [
       // Cleanup dist folder
-      new CleanWebpackPlugin(),
+      // new CleanWebpackPlugin(),
+      new webpack.EnvironmentPlugin(['NODE_ENV']),
       new HtmlWebpackPlugin({
-        template: './index.html'
-      }),
+        template: './index.html',
+        minify: isDevelopment ? false : {
+            removeAttributeQuotes: true,
+            collapseWhitespace: true,
+            removeComments: true
+        }
+      }),  
       isDevelopment && new ReactRefreshWebpackPlugin(),
     ].filter(Boolean),
     optimization: isDevelopment ? {} : {
@@ -44,7 +51,7 @@ module.exports = {
                     options: {
                         // This is required for react-refresh to function:
                         plugins: [
-                            process.env.NODE_ENV === 'development' && require.resolve('react-refresh/babel')
+                            process.env.NODE_ENV === isDevelopment && new ReactRefreshWebpackPlugin(),
                         ].filter(Boolean)
                     }
                 }

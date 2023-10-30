@@ -27,7 +27,7 @@ const Main = ({ selectedTime }) => {
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
   const [wetLevel, setWetLevel] = useState(0);
-  const [filterLevelBreath, setFilterLevelBreath] = useState(250);
+  const [filterLevelBreath, setFilterLevelBreath] = useState(400);
   const [filterLevelDrum, setFilterLevelDrum] = useState(60);
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
@@ -61,8 +61,8 @@ const Main = ({ selectedTime }) => {
     let currentFilterDrum = filterLevelDrum;
 
     // Update filter frequency based on the remaining time
-    const filterIncreaseBreath = (5500 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
-    const filterIncreaseDrum = (800 - currentFilterDrum) / (durationInSeconds / 2); // Going from 100hz to 6000hz
+    const filterIncreaseBreath = (6000 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
+    const filterIncreaseDrum = (1000 - currentFilterDrum) / (durationInSeconds / 2); // Going from 100hz to 6000hz
 
     intervalId.current = setInterval(() => {
 
@@ -71,9 +71,9 @@ const Main = ({ selectedTime }) => {
       setTimeout(() => {
         setFilterLevelBreath((prevFilterLevel) => {
           currentFilterBreath = prevFilterLevel + filterIncreaseBreath;
-          if (currentFilterBreath >= 6000) {
+          if (currentFilterBreath >= 8000) {
             clearInterval(intervalId.current);
-            return 6000;
+            return 8000;
         }
         return currentFilterBreath;
         })
@@ -113,13 +113,14 @@ const Main = ({ selectedTime }) => {
         }
         return currentBPM;
       });
-
+      console.log("BPM: ", currentBPM);
+      
       console.log("filterIncrease breath: ", filterIncreaseBreath);
       console.log("currentFilter breath: ", currentFilterBreath);
       increaseFilterBreathFrequency(currentFilterBreath);
 
-      console.log("filterIncrease breath: ", filterIncreaseDrum);
-      console.log("currentFilter breath: ", currentFilterDrum);
+      console.log("filterIncrease Drum: ", filterIncreaseDrum);
+      console.log("currentFilter Drum: ", currentFilterDrum);
       increaseFilterDrumFrequency(currentFilterDrum);
 
       console.log("wetLevel: ", currentWetLevel);
@@ -180,7 +181,7 @@ const Main = ({ selectedTime }) => {
     }
     setIsRunning(!isRunning);
     if (!isRunning) {
-      adjustEffects(); // start FX adjustment
+      adjustEffects(); // start BPM/FX adjustment
 
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
@@ -197,13 +198,13 @@ const Main = ({ selectedTime }) => {
   const resetTimer = () => {
     setIsRunning(false);
     setCountdown(selectedTime * 60);
-    cleanupLoops();
     clearInterval(intervalId.current);
+    cleanupLoops();
+    Tone.Transport.stop();
     setBPM(30);
     setFilterLevelDrum(60);
     setFilterLevelBreath(250);
     setWetLevel(0);
-    Tone.Transport.stop();
   };
 
   // useEffect Hooks
@@ -262,6 +263,8 @@ useEffect(() => {
 
       const autoReset = setTimeout(() => {
         setIsRunning(false);
+        cleanupLoops();
+        Tone.Transport.stop();
         setCountdown(selectedTime * 60);
         setBPM(30);
         setFilterLevelDrum(60);
