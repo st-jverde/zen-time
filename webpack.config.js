@@ -21,8 +21,8 @@ module.exports = {
       historyApiFallback: true,
     },
     plugins: [
+      // Cleanup dist folder
       new CleanWebpackPlugin(),
-
       new HtmlWebpackPlugin({
         template: './index.html'
       }),
