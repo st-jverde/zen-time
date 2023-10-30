@@ -52,53 +52,50 @@ const Main = ({ selectedTime }) => {
     const durationInSeconds = selectedTime * 60;
     const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
 
-   
-
-    // Filter Breath
-    let currentFilterBreath = filterLevelBreath;
-    let currentFilterDrum = filterLevelDrum;
     // Variable for when you want to start it halfway the selected time
     const halfTime = (durationInSeconds / 2) * 1000;
     const quarterTime = (durationInSeconds / 4) * 1000;
 
+    // Filter
+    let currentFilterBreath = filterLevelBreath;
+    let currentFilterDrum = filterLevelDrum;
+
     // Update filter frequency based on the remaining time
-    const filterIncreaseBreath = (4000 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
-    const filterIncreaseDrum = (1000 - currentFilterBreath) / (durationInSeconds / 2); // Going from 100hz to 6000hz
+    const filterIncreaseBreath = (5500 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
+    const filterIncreaseDrum = (800 - currentFilterDrum) / (durationInSeconds / 2); // Going from 100hz to 6000hz
 
-    //Reverb
-    let currentWetLevel = wetLevel;
-    // Calculate the increase per second based on the selected time
-    const increasePerSecond = 1 / durationInSeconds
-    // Calculate the current wet level based on the elapsed time
-
-    // ---- SET LEVELS --------
     intervalId.current = setInterval(() => {
 
-      // **** START FILTER AT 25% OF SELECTED TIME ****
-      // Filter Breath
+      // **** START FILTER AT 50% OF SELECTED TIME ****
+      // Breath filter
       setTimeout(() => {
         setFilterLevelBreath((prevFilterLevel) => {
           currentFilterBreath = prevFilterLevel + filterIncreaseBreath;
-          if (currentFilterBreath >= 6500) {
+          if (currentFilterBreath >= 6000) {
             clearInterval(intervalId.current);
-            return 6500;
+            return 6000;
         }
         return currentFilterBreath;
         })
       }, quarterTime);
 
-      // Filter Drum
+      // Drum Filter
       setTimeout(() => {
         setFilterLevelDrum((prevFilterLevel) => {
           currentFilterDrum = prevFilterLevel + filterIncreaseDrum;
-          if (currentFilterDrum >= 5000) {
+          if (currentFilterDrum >= 1000) {
             clearInterval(intervalId.current);
-            return 5000;
+            return 1000;
         }
         return currentFilterDrum;
         })
       }, halfTime);
 
+      //Reverb
+      let currentWetLevel = wetLevel;
+      // Calculate the increase per second based on the selected time
+      const increasePerSecond = 1 / durationInSeconds
+      
       setWetLevel((prevWetLevel) => {
         currentWetLevel = prevWetLevel + increasePerSecond;
         if (currentWetLevel >= 1) {
@@ -117,12 +114,12 @@ const Main = ({ selectedTime }) => {
         return currentBPM;
       });
 
-      console.log("filterIncreaseBreath: ", filterIncreaseBreath);
-      console.log("currentFilterBreath: ", currentFilterBreath);
+      console.log("filterIncrease breath: ", filterIncreaseBreath);
+      console.log("currentFilter breath: ", currentFilterBreath);
       increaseFilterBreathFrequency(currentFilterBreath);
 
-      console.log("filterIncreaseDrum: ", filterIncreaseDrum);
-      console.log("currentFilterDrum: ", currentFilterDrum);
+      console.log("filterIncrease breath: ", filterIncreaseDrum);
+      console.log("currentFilter breath: ", currentFilterDrum);
       increaseFilterDrumFrequency(currentFilterDrum);
 
       console.log("wetLevel: ", currentWetLevel);
@@ -183,7 +180,7 @@ const Main = ({ selectedTime }) => {
     }
     setIsRunning(!isRunning);
     if (!isRunning) {
-      adjustEffects(); // start BPM adjustment
+      adjustEffects(); // start FX adjustment
 
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
@@ -203,8 +200,8 @@ const Main = ({ selectedTime }) => {
     cleanupLoops();
     clearInterval(intervalId.current);
     setBPM(30);
-    setFilterLevelBreath(200);
     setFilterLevelDrum(60);
+    setFilterLevelBreath(250);
     setWetLevel(0);
     Tone.Transport.stop();
   };
@@ -267,8 +264,8 @@ useEffect(() => {
         setIsRunning(false);
         setCountdown(selectedTime * 60);
         setBPM(30);
-        setFilterLevelBreath(200);
         setFilterLevelDrum(60);
+        setFilterLevelBreath(250);
         setWetLevel(0);
       }, 10000);
 
@@ -286,7 +283,7 @@ useEffect(() => {
               <h1 className='text-main'>WELCOME</h1>
               <div className='text-sec text-base'>
                 <p>
-                  Zen Time is a meditation timer with sound.<br />
+                  Zen Time is a meditation timer with sound guidance.<br />
                   First select the prevered time you want to meditate.<br />
                   When you press "Start", the the timer will start counting down.<br />
                   You'll hear sounds that will guide you in your meditation.<br />
@@ -315,7 +312,7 @@ useEffect(() => {
             >
               Get ready to start
             </button>
-            {!audioReady && <p>Loading audio...</p>}
+            {!audioReady && <p className='text-sec'>Loading audio...</p>}
           </>
         ) : (
           <>
