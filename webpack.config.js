@@ -23,7 +23,7 @@ module.exports = {
     },
     plugins: [
       // Cleanup dist folder
-      // new CleanWebpackPlugin(),
+      new CleanWebpackPlugin(),
       new webpack.EnvironmentPlugin(['NODE_ENV']),
       new HtmlWebpackPlugin({
         template: './index.html',

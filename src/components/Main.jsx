@@ -27,8 +27,8 @@ const Main = ({ selectedTime }) => {
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
   const [wetLevel, setWetLevel] = useState(0);
-  const [filterLevelBreath, setFilterLevelBreath] = useState(400);
-  const [filterLevelDrum, setFilterLevelDrum] = useState(60);
+  const [filterLevelBreath, setFilterLevelBreath] = useState(200);
+  const [filterLevelDrum, setFilterLevelDrum] = useState(80);
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
@@ -53,7 +53,7 @@ const Main = ({ selectedTime }) => {
     const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
 
     // Variable for when you want to start it halfway the selected time
-    const halfTime = (durationInSeconds / 2) * 1000;
+    // const halfTime = (durationInSeconds / 2) * 1000;
     const quarterTime = (durationInSeconds / 4) * 1000;
 
     // Filter
@@ -61,12 +61,11 @@ const Main = ({ selectedTime }) => {
     let currentFilterDrum = filterLevelDrum;
 
     // Update filter frequency based on the remaining time
-    const filterIncreaseBreath = (6000 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
-    const filterIncreaseDrum = (1000 - currentFilterDrum) / (durationInSeconds / 2); // Going from 100hz to 6000hz
+    const filterIncreaseBreath = (5000 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
+    const filterIncreaseDrum = (1000 - currentFilterDrum) / durationInSeconds; // Going from 100hz to 6000hz
 
     intervalId.current = setInterval(() => {
 
-      // **** START FILTER AT 50% OF SELECTED TIME ****
       // Breath filter
       setTimeout(() => {
         setFilterLevelBreath((prevFilterLevel) => {
@@ -89,7 +88,7 @@ const Main = ({ selectedTime }) => {
         }
         return currentFilterDrum;
         })
-      }, halfTime);
+      }, quarterTime);
 
       //Reverb
       let currentWetLevel = wetLevel;
@@ -199,11 +198,9 @@ const Main = ({ selectedTime }) => {
     setIsRunning(false);
     setCountdown(selectedTime * 60);
     clearInterval(intervalId.current);
-    cleanupLoops();
-    Tone.Transport.stop();
     setBPM(30);
-    setFilterLevelDrum(60);
-    setFilterLevelBreath(250);
+    setFilterLevelDrum(80);
+    setFilterLevelBreath(200);
     setWetLevel(0);
   };
 
@@ -263,12 +260,10 @@ useEffect(() => {
 
       const autoReset = setTimeout(() => {
         setIsRunning(false);
-        cleanupLoops();
-        Tone.Transport.stop();
         setCountdown(selectedTime * 60);
         setBPM(30);
-        setFilterLevelDrum(60);
-        setFilterLevelBreath(250);
+        setFilterLevelDrum(80);
+        setFilterLevelBreath(200);
         setWetLevel(0);
       }, 10000);
 
@@ -283,18 +278,22 @@ useEffect(() => {
           <>
             {/* Initialize Audio UI */}
             <div className="text-9xl mb-6">
-              <h1 className='text-main'>WELCOME</h1>
-              <div className='text-sec text-base'>
+            <h1 className='text-main'>Welcome to Zen Time</h1>
+            <div className='text-sec text-base'>
                 <p>
-                  Zen Time is a meditation timer with sound guidance.<br />
-                  First select the prevered time you want to meditate.<br />
-                  When you press "Start", the the timer will start counting down.<br />
-                  You'll hear sounds that will guide you in your meditation.<br />
-                  They will help you calm down, drift off.<br />
-                  Over time te sounds slow down and seem to become more distant.<br /> 
+                  <br />
+                  a meditation timer with sound guidance.<br />
+                  <br />
+                  You will hear:<br />
+                  samples that mimic the rhythm of in and out breaths,<br /> 
+                  complemented by bilateral beats.<br />
+                  <br />
+                  As your session unfolds, the sounds will gradually slow down and fade away,<br /> 
+                  guiding you to a deeper state of relaxation and meditation.<br />
+                  <br />
                 </p>
-              </div>
-              <h2 className='text-main text-base'>I hope you enjoy 🙏</h2>
+            </div>
+            <h2 className='text-main text-base'>May your journey be tranquil 🙏</h2>
             </div>
             <button
               onClick={() => {
