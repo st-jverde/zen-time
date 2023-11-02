@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
+import NoSleep from 'nosleep.js';
+
 import { 
   loadAudio, 
   initializeAudio, 
@@ -19,10 +21,18 @@ import breath4 from '../samples/breath-4.mp3';
 import ZTShaL from '../samples/ZT-sha-L.mp3';
 import ZTShaR from '../samples/ZT-sha-R.mp3';
 
-const Main = ({ selectedTime }) => {
+const noSleep = new NoSleep();
+
+const Main = ({ selectedTime, selectSettlingTime }) => {
   // Initial State & Refs
   const [countdown, setCountdown] = useState(selectedTime * 60);
-  const [isRunning, setIsRunning] = useState(false);
+  // const [isRunning, setIsRunning] = useState(false);
+  const [countdownSettlingTime, setCountdownSettlingTime] = useState(selectSettlingTime * 60);
+  const [isActiveST, setIsActiveST] = useState(false);
+
+  const [isActive, setIsActive] = useState(false);
+  const [text, setText] = useState('Press Start');
+
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(30);
@@ -47,9 +57,9 @@ const Main = ({ selectedTime }) => {
 
   const adjustEffects = () => {
     //BPM
-    let currentBPM = BPM;
+    let currentBPM = 30;
     // totalBPMChange = 20; // Change BPM from start 30 to 10
-    const durationInSeconds = selectedTime * 60;
+    const durationInSeconds = selectSettlingTime * 60;
     const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
 
     // Variable for when you want to start it halfway the selected time
@@ -169,6 +179,31 @@ const Main = ({ selectedTime }) => {
     drumSampleIndex.current = 0;
   };
 
+  // const toggleTimer = async () => {
+  //   if (Tone && Tone.context && Tone.context.state !== 'running') {
+  //     try {
+  //       await Tone.context.resume();
+  //     } catch (error) {
+  //       console.error("Failed to resume the Tone audio context:", error);
+  //       return;
+  //     }
+  //   }
+  //   setIsRunning(!isActive);
+  //   if (!isActive) {
+  //     adjustEffects(); // start BPM/FX adjustment
+
+  //     Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
+  //     playSample("startGong");
+  //     const delayStart = setTimeout(() => initiateLoops(), 2000);
+  //     Tone.Transport.start();
+  //     return () => clearTimeout(delayStart);
+  //   } else {
+  //     clearInterval(intervalId.current);
+  //     cleanupLoops();
+  //     Tone.Transport.stop();
+  //   }
+  // };
+
   const toggleTimer = async () => {
     if (Tone && Tone.context && Tone.context.state !== 'running') {
       try {
@@ -178,36 +213,52 @@ const Main = ({ selectedTime }) => {
         return;
       }
     }
-    setIsRunning(!isRunning);
-    if (!isRunning) {
+    if (!isActive) {
+      setIsActive(true); // Set the countdown active
+      setIsActiveST(true);
+      noSleep.enable();
       adjustEffects(); // start BPM/FX adjustment
-
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
       const delayStart = setTimeout(() => initiateLoops(), 2000);
       Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
+      setIsActive(false); // Set the countdown inactive
       clearInterval(intervalId.current);
       cleanupLoops();
       Tone.Transport.stop();
+      noSleep.disable();
     }
-  };
+};
 
-  const resetTimer = () => {
-    setIsRunning(false);
-    setCountdown(selectedTime * 60);
-    clearInterval(intervalId.current);
-    setBPM(30);
-    setFilterLevelDrum(80);
-    setFilterLevelBreath(200);
-    setWetLevel(0);
-  };
+
+const resetTimer = () => {
+  const newBPM = 30;
+  setIsActive(false)
+  setCountdown(selectedTime * 60);
+  setCountdownSettlingTime(selectSettlingTime * 60);
+  clearInterval(intervalId.current);
+  stopAndDisposeLoops(); // stop the audio loops
+  Tone.Transport.stop();
+  setBPM(newBPM);
+  Tone.Transport.bpm.setValueAtTime(newBPM, Tone.now());
+  setFilterLevelDrum(80);
+  setFilterLevelBreath(200);
+  setWetLevel(0);
+};
+
 
   // useEffect Hooks
+  // Countdown overall timer
   useEffect(() => {
     setCountdown(selectedTime * 60);
   }, [selectedTime]);
+
+  // Countdown settling down timer
+  useEffect(() => {
+    setCountdownSettlingTime(selectSettlingTime * 60);
+  }, [selectSettlingTime]);
 
   useEffect(() => {
     // This function will help us chain our promises for each audio load
@@ -229,71 +280,159 @@ const Main = ({ selectedTime }) => {
     loadAllAudios();
   }, []);
 
+  // Settling down countdown timer
+  // useEffect(() => {
+  //   let timerST;  
+  //   if (isRunningST && countdownSettlingTime > 0) {
+  //     timerST = setInterval(() => {
+  //       setCountdownSettlingTime((prevCountdownST) => prevCountdownST - 1);
+  //     }, 1000);
+  //   } else {
+  //     setIsRunningST(false);
+  //   }
+  //   return () => clearInterval(timerST);
+  // }, [isRunningST, countdownSettlingTime]);
+
+  // // Countdown overall time
+  // useEffect(() => {
+  //   let timer;
+  //   if (isRunning && countdown > 0) {
+  //       timer = setInterval(() => {
+  //           setCountdown((prevCountdown) => prevCountdown - 1);
+  //       }, 1000);
+  //   } else {
+  //       setIsRunning(false);
+  //   }
+  //   return () => clearInterval(timer);
+  // }, [isRunning, countdown]);
+
+
   useEffect(() => {
     let timer;
-    if (isRunning && countdown > 0) {
-        timer = setInterval(() => {
-            setCountdown((prevCountdown) => prevCountdown - 1);
-        }, 1000);
+    if (isActive && countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown, isActive]);
+
+  useEffect(() => {
+    let settlingTimer;
+    if (isActive && countdownSettlingTime > 0) {
+      settlingTimer = setTimeout(() => setCountdownSettlingTime(countdownSettlingTime - 1), 1000);
+    }
+    return () => clearTimeout(settlingTimer);
+  }, [countdownSettlingTime, isActive]);
+
+
+  // Clears the interval (identified by intervalId.current) to prevent memory leaks upon component unmount.
+  useEffect(() => {
+    return () => {
+        clearInterval(intervalId.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isActive) {
+      setText('Press Start');
     } else {
-        setIsRunning(false);
+      if (countdown && countdownSettlingTime > 0) {
+        setText(`Settling time: ${selectSettlingTime} min`);
+      } else if (countdown > 0 && countdownSettlingTime === 0) {
+        setText('🧘');
+      } 
     }
-    return () => clearInterval(timer);
-  }, [isRunning, countdown]);
-
-// Clears the interval (identified by intervalId.current) to prevent memory leaks upon component unmount.
-useEffect(() => {
-  return () => {
-      clearInterval(intervalId.current);
-  };
-}, []);
+  }, [countdown, countdownSettlingTime, isActive])
 
   useEffect(() => {
-    if (countdown === 4) stopAndDisposeLoops();
-  }, [countdown]);
-
-  useEffect(() => {
-    if (countdown === 0) {
-      playSample("endGong", 1);
-      stopAndDisposeLoops();
-      clearInterval(intervalId.current);
-
-      const autoReset = setTimeout(() => {
-        setIsRunning(false);
-        setCountdown(selectedTime * 60);
-        setBPM(30);
-        setFilterLevelDrum(80);
-        setFilterLevelBreath(200);
-        setWetLevel(0);
-      }, 10000);
-
-      return () => clearTimeout(autoReset);
+    if (countdownSettlingTime === 0) {
+      playSample("startGong");
     }
-  }, [countdown]);
+  }, [countdownSettlingTime]);
+
+
+  useEffect(() => { 
+    const newBPM = 30;
+    if (isActive) {
+      if (countdown === countdownSettlingTime) {
+        setBPM(newBPM);
+        playSample("startGong");
+        initiateLoops();
+      }
+      if (countdownSettlingTime === 4) {
+        stopAndDisposeLoops();
+      }
+      if (countdown === 0) {
+        playSample("endGong", 1);
+        clearInterval(intervalId.current);
+        setText('🙏');
+        
+        const autoReset = setTimeout(() => {
+          setIsActive(false);
+          stopAndDisposeLoops();
+          Tone.Transport.stop();
+          setCountdown(selectedTime * 60);
+          setCountdownSettlingTime(selectSettlingTime * 60);
+          setBPM(newBPM);
+          Tone.Transport.bpm.setValueAtTime(newBPM, Tone.now());
+          setFilterLevelDrum(80);
+          setFilterLevelBreath(200);
+          setWetLevel(0);
+        }, 10000);
+  
+        return () => clearTimeout(autoReset);
+
+      }
+    } 
+  }, [countdown, countdownSettlingTime, isActive]);
+  
+
+  // useEffect(() => {
+  //   if (countdownSettlingTime === 4) stopAndDisposeLoops();
+  // }, [countdownSettlingTime]);
+
+  // useEffect(() => {
+  //   if (countdownSettlingTime === 0) {
+  //     playSample("startGong", 1);
+  //     stopAndDisposeLoops();
+  //     clearInterval(intervalId.current);
+  //     setIsRunningST(false);
+  //   }
+  // }, [countdownSettlingTime]);
+
+  // useEffect(() => {
+  //   if (countdown === 0) {
+  //     playSample("endGong", 1);
+  //     stopAndDisposeLoops();
+  //     clearInterval(intervalId.current);
+  //     setIsRunning(false);
+
+  //     const autoReset = setTimeout(() => {
+  //       setCountdown(selectedTime * 60);
+  //       setBPM(30);
+  //       setFilterLevelDrum(80);
+  //       setFilterLevelBreath(200);
+  //       setWetLevel(0);
+  //     }, 10000);
+
+  //     return () => clearTimeout(autoReset);
+  //   }
+  // }, [countdown]);
 
   return (
-    <div className="flex-1 ml-64 bg-dark flex items-center justify-center">
+    <div className="flex-1 bg-dark flex items-center justify-center">
       <div className="text-center">
         {!audioInitialized ? (
           <>
             {/* Initialize Audio UI */}
-            <div className="text-9xl mb-6">
-            <h1 className='text-main'>Welcome to Zen Time</h1>
-            <div className='text-sec text-base'>
-                <p>
-                  <br />
-                  a meditation timer with sound guidance.<br />
-                  <br />
-                  You will hear:<br />
-                  samples that mimic the rhythm of in and out breaths,<br /> 
-                  complemented by bilateral beats.<br />
-                  <br />
-                  As your session unfolds, the sounds will gradually slow down and fade away,<br /> 
-                  guiding you to a deeper state of relaxation and meditation.<br />
-                  <br />
-                </p>
-            </div>
-            <h2 className='text-main text-base'>May your journey be tranquil 🙏</h2>
+            <div className="text-6xl mb-6">
+              <h1 className='text-main'>Welcome to Zen Time</h1>
+              <div className='text-sec text-base'>
+                  <p>
+                    <br />
+                    A meditation timer with sound guidance
+                    <br />
+                  </p>
+              </div>
             </div>
             <button
               onClick={() => {
@@ -312,12 +451,17 @@ useEffect(() => {
               }}
               className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
             >
-              Get ready to start
+              Get ready to start & enjoy 🙏
             </button>
             {!audioReady && <p className='text-sec'>Loading audio...</p>}
           </>
         ) : (
           <>
+            <div className="text-2xl mb-4 text-main">
+              <p>
+                {text}
+              </p>
+            </div>
             {/* Timer UI */}
             <div className="text-9xl mb-4 text-main">
               <h1>{`${Math.floor(countdown / 60)}:${countdown % 60 < 10 ? '0' : ''}${countdown % 60}`}</h1>
@@ -326,7 +470,7 @@ useEffect(() => {
               onClick={toggleTimer}
               className="mr-4 bg-sec hover:bg-ter text-ter hover:text-sec px-4 py-2 rounded"
             >
-              {isRunning ? 'Pause' : 'Start'}
+              {isActive ? 'Pause' : 'Start'}
             </button>
             <button
               onClick={resetTimer}
@@ -334,7 +478,6 @@ useEffect(() => {
             >
               Reset
             </button>
-            {/* {<p className='px-4 text-sec'>{BPM}</p>} */}
           </>
         )}
       </div>
