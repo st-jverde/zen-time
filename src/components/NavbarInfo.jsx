@@ -11,14 +11,11 @@ const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSe
           <div className="offcanvas offcanvas-end text-bg-dark" tabIndex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
             <div className="offcanvas-header">
               <h5 className="offcanvas-title text-sec" id="offcanvasDarkNavbarLabel">Meditation with sound guidance</h5>
-              <button type="button" className="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+              <button type="button" className="btn-close text-sec hover:text-main font-black" data-bs-dismiss="offcanvas" aria-label="Close">X</button>
             </div>
-            <div className="offcanvas-body">
-              <ul className="navbar-nav justify-content-end flex-grow-1 pe-3">
-                {/* {<li className="nav-item">
-                  <a className="nav-link active" aria-current="page" href="#">Home</a>
-                </li>} */}
-                <li className="nav-item dropdown">
+            <div class="offcanvas-body">
+              <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                <li class="nav-item">
                   <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Settle Down Time: {selectSettlingTime} min
                   </a>

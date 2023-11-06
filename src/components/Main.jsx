@@ -333,7 +333,7 @@ const resetTimer = () => {
 
   useEffect(() => {
     if (!isActive) {
-      setText('Press Start');
+      setText('Press Start to begin');
     } else {
       if (countdown && countdownSettlingTime > 0) {
         setText(`Settling time: ${selectSettlingTime} min`);
@@ -424,7 +424,7 @@ const resetTimer = () => {
         {!audioInitialized ? (
           <>
             {/* Initialize Audio UI */}
-            <div className="text-6xl mb-6">
+            <div className="md:text-6xl sm:text-2xl mb-6">
               <h1 className='text-main'>Welcome to Zen Time</h1>
               <div className='text-sec text-base'>
                   <p>
@@ -451,7 +451,7 @@ const resetTimer = () => {
               }}
               className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
             >
-              Get ready to start & enjoy 🙏
+              Get ready to begin & enjoy 🙏
             </button>
             {!audioReady && <p className='text-sec'>Loading audio...</p>}
           </>
