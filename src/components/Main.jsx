@@ -225,6 +225,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       return () => clearTimeout(delayStart);
     } else {
       setIsActive(false); // Set the countdown inactive
+      setIsActiveST(false);
       clearInterval(intervalId.current);
       cleanupLoops();
       Tone.Transport.stop();
@@ -235,7 +236,8 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
 const resetTimer = () => {
   const newBPM = 30;
-  setIsActive(false)
+  setIsActive(false);
+  setIsActiveST(false);
   setCountdown(selectedTime * 60);
   setCountdownSettlingTime(selectSettlingTime * 60);
   clearInterval(intervalId.current);
@@ -336,7 +338,7 @@ const resetTimer = () => {
       setText('Press Start to begin');
     } else {
       if (countdown && countdownSettlingTime > 0) {
-        setText(`Settling time: ${selectSettlingTime} min`);
+        setText(`🎧 Settling down: ${selectSettlingTime} min`);
       } else if (countdown > 0 && countdownSettlingTime === 0) {
         setText('🧘');
       } 
@@ -345,7 +347,7 @@ const resetTimer = () => {
 
   useEffect(() => {
     if (countdownSettlingTime === 0) {
-      playSample("startGong");
+      playSample("🔔 startGong");
     }
   }, [countdownSettlingTime]);
 
@@ -425,11 +427,11 @@ const resetTimer = () => {
           <>
             {/* Initialize Audio UI */}
             <div className="md:text-6xl sm:text-2xl mb-6">
-              <h1 className='text-main'>Welcome to Zen Time</h1>
+              <h1 className='text-main'>Zen Time</h1>
               <div className='text-sec text-base'>
                   <p>
                     <br />
-                    A meditation timer with sound guidance
+                    meditation timer with sound guidance
                     <br />
                   </p>
               </div>
@@ -451,7 +453,7 @@ const resetTimer = () => {
               }}
               className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
             >
-              Get ready to begin & enjoy 🙏
+              Continue
             </button>
             {!audioReady && <p className='text-sec'>Loading audio...</p>}
           </>
