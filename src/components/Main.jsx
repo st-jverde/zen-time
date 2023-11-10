@@ -179,31 +179,6 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     drumSampleIndex.current = 0;
   };
 
-  // const toggleTimer = async () => {
-  //   if (Tone && Tone.context && Tone.context.state !== 'running') {
-  //     try {
-  //       await Tone.context.resume();
-  //     } catch (error) {
-  //       console.error("Failed to resume the Tone audio context:", error);
-  //       return;
-  //     }
-  //   }
-  //   setIsRunning(!isActive);
-  //   if (!isActive) {
-  //     adjustEffects(); // start BPM/FX adjustment
-
-  //     Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
-  //     playSample("startGong");
-  //     const delayStart = setTimeout(() => initiateLoops(), 2000);
-  //     Tone.Transport.start();
-  //     return () => clearTimeout(delayStart);
-  //   } else {
-  //     clearInterval(intervalId.current);
-  //     cleanupLoops();
-  //     Tone.Transport.stop();
-  //   }
-  // };
-
   const toggleTimer = async () => {
     if (Tone && Tone.context && Tone.context.state !== 'running') {
       try {
@@ -224,15 +199,16 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
+      if (isActiveST) {
+        setIsActiveST(false);
+      }
       setIsActive(false); // Set the countdown inactive
-      setIsActiveST(false);
       clearInterval(intervalId.current);
       cleanupLoops();
       Tone.Transport.stop();
       noSleep.disable();
     }
 };
-
 
 const resetTimer = () => {
   const newBPM = 30;
@@ -282,33 +258,6 @@ const resetTimer = () => {
     loadAllAudios();
   }, []);
 
-  // Settling down countdown timer
-  // useEffect(() => {
-  //   let timerST;  
-  //   if (isRunningST && countdownSettlingTime > 0) {
-  //     timerST = setInterval(() => {
-  //       setCountdownSettlingTime((prevCountdownST) => prevCountdownST - 1);
-  //     }, 1000);
-  //   } else {
-  //     setIsRunningST(false);
-  //   }
-  //   return () => clearInterval(timerST);
-  // }, [isRunningST, countdownSettlingTime]);
-
-  // // Countdown overall time
-  // useEffect(() => {
-  //   let timer;
-  //   if (isRunning && countdown > 0) {
-  //       timer = setInterval(() => {
-  //           setCountdown((prevCountdown) => prevCountdown - 1);
-  //       }, 1000);
-  //   } else {
-  //       setIsRunning(false);
-  //   }
-  //   return () => clearInterval(timer);
-  // }, [isRunning, countdown]);
-
-
   useEffect(() => {
     let timer;
     if (isActive && countdown > 0) {
@@ -338,7 +287,7 @@ const resetTimer = () => {
       setText('Press Start to begin');
     } else {
       if (countdown && countdownSettlingTime > 0) {
-        setText(`🎧 Settling down: ${selectSettlingTime} min`);
+        setText(`🎧 Settle down (${selectSettlingTime} min)`);
       } else if (countdown > 0 && countdownSettlingTime === 0) {
         setText('🧘');
       } 
@@ -347,7 +296,8 @@ const resetTimer = () => {
 
   useEffect(() => {
     if (countdownSettlingTime === 0) {
-      playSample("🔔 startGong");
+      setIsActiveST(false);
+      playSample("startGong", 1);
     }
   }, [countdownSettlingTime]);
 
@@ -386,39 +336,6 @@ const resetTimer = () => {
       }
     } 
   }, [countdown, countdownSettlingTime, isActive]);
-  
-
-  // useEffect(() => {
-  //   if (countdownSettlingTime === 4) stopAndDisposeLoops();
-  // }, [countdownSettlingTime]);
-
-  // useEffect(() => {
-  //   if (countdownSettlingTime === 0) {
-  //     playSample("startGong", 1);
-  //     stopAndDisposeLoops();
-  //     clearInterval(intervalId.current);
-  //     setIsRunningST(false);
-  //   }
-  // }, [countdownSettlingTime]);
-
-  // useEffect(() => {
-  //   if (countdown === 0) {
-  //     playSample("endGong", 1);
-  //     stopAndDisposeLoops();
-  //     clearInterval(intervalId.current);
-  //     setIsRunning(false);
-
-  //     const autoReset = setTimeout(() => {
-  //       setCountdown(selectedTime * 60);
-  //       setBPM(30);
-  //       setFilterLevelDrum(80);
-  //       setFilterLevelBreath(200);
-  //       setWetLevel(0);
-  //     }, 10000);
-
-  //     return () => clearTimeout(autoReset);
-  //   }
-  // }, [countdown]);
 
   return (
     <div className="flex-1 bg-dark flex items-center justify-center">
