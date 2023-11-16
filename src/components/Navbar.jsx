@@ -39,6 +39,30 @@ const Navbar = ({ onTimeSelect, selectedTime }) => {
                             onChange={(e) => onSettlingTimeSelect(parseInt(e.target.value))}
                         />
                     </ul>
+                    <ul className="dropdown-menu dropdown-menu-dark">
+                    { [1, 2, 3, 4].map((time, index) => {
+                        return <li><a 
+                            key={index}
+                            className={`dropdown-item pr-6 pl-2 py-1 rounded text-sec border-2
+                            ${selectSettlingTime === time ? 'outline-none border-sec' : 'border-transparent'}
+                            hover:border-sec`}
+                            onClick={() => onSettlingTimeSelect(time)}>
+                            {time} min</a>
+                        </li>
+                    })}
+                  </ul>
+                  <ul className="dropdown-menu dropdown-menu-dark">
+                    { [5, 10, 15, 30, 45, 60].map((time, index) => {
+                        return <li><a 
+                            key={index}
+                            className={`dropdown-item pr-6 pl-2 py-1 rounded text-sec border-2
+                            ${selectedTime === time ? 'outline-none border-sec' : 'border-transparent'}
+                            hover:border-sec`}
+                            onClick={() => onTimeSelect(time)}>
+                            {time} min</a>
+                        </li>
+                    })}
+                  </ul>
                 </li>
 
 
