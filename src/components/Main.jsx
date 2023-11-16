@@ -12,25 +12,26 @@ import {
 } from '../audio';
 import '../tailwind.css';
 
-import startGong from '../samples/ZT-start-gong.mp3';
-import endGong from '../samples/ZT-end-gong.mp3';
-import breath1 from '../samples/breath-1.mp3';
-import breath2 from '../samples/breath-2.mp3';
-import breath3 from '../samples/breath-3.mp3';
-import breath4 from '../samples/breath-4.mp3';
-import ZTShaL from '../samples/ZT-sha-L.mp3';
-import ZTShaR from '../samples/ZT-sha-R.mp3';
+import cl from '../../cloudinaryConfig';
+
+// import startGong from '../samples/ZT-start-gong.mp3';
+// import endGong from '../samples/ZT-end-gong.mp3';
+// import breath1 from '../samples/breath-1.mp3';
+// import breath2 from '../samples/breath-2.mp3';
+// import breath3 from '../samples/breath-3.mp3';
+// import breath4 from '../samples/breath-4.mp3';
+// import ZTShaL from '../samples/ZT-sha-L.mp3';
+// import ZTShaR from '../samples/ZT-sha-R.mp3';
 
 const noSleep = new NoSleep();
 
 const Main = ({ selectedTime, selectSettlingTime }) => {
   // Initial State & Refs
   const [countdown, setCountdown] = useState(selectedTime * 60);
-  // const [isRunning, setIsRunning] = useState(false);
   const [countdownSettlingTime, setCountdownSettlingTime] = useState(selectSettlingTime * 60);
   const [isActiveST, setIsActiveST] = useState(false);
-
   const [isActive, setIsActive] = useState(false);
+  const [droneActive, setDroneActive] = useState(false);
   const [text, setText] = useState('Press Start');
 
   const [audioReady, setAudioReady] = useState(false);
@@ -42,11 +43,13 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
+  // const droneSamples = ["ZT-drone-1", "ZT-drone-2"];
 
   const breathSampleIndex = useRef(0);
   const drumSampleIndex = useRef(0);
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
+  const droneLoopRef = useRef(null);
 
   let intervalId = useRef(null); // ID of the interval to clear it later
 
@@ -138,8 +141,34 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       // Update Tone.Transport's BPM
       Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
     }, 1000);
-  }; 
+  };
   
+  // DRONE LOOPS
+  const onDroneEnd = () => {
+    // Actions to perform when the drone sample ends
+    cleanupDroneLoops();
+    console.log("Drone sample has ended. Next playback will start in 10 seconds.");
+    // You can add logic here if you need to do something specific when the sample ends
+  };
+  
+  const droneLoops = () => {
+    playSample("ZT-drone-2", 1.0, onDroneEnd);
+    playSample("ZT-drone-1", 1.0, onDroneEnd);
+  }
+
+  const cleanupDroneLoops = () => {
+    droneLoopRef.current?.stop(0);
+  }
+
+  const stopAndDisposeDroneLoops = () => {
+    if (droneLoopRef.current) {
+      droneLoopRef.current.stop(0);
+      droneLoopRef.current.dispose();
+      droneLoopRef.current = null;
+    }
+  }
+  
+  // SETTLING DOWN LOOPS
   const initiateLoops = () => {
     breathLoopRef.current = new Tone.Loop((time) => {
       const rate = getPlaybackRate(BPM);
@@ -196,11 +225,17 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
       const delayStart = setTimeout(() => initiateLoops(), 2000);
+      if (droneActive) {
+        droneLoops();
+      }
       Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
       if (isActiveST) {
         setIsActiveST(false);
+      }
+      if (droneActive) {
+        cleanupDroneLoops();
       }
       setIsActive(false); // Set the countdown inactive
       clearInterval(intervalId.current);
@@ -208,24 +243,24 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       Tone.Transport.stop();
       noSleep.disable();
     }
-};
+  };
 
-const resetTimer = () => {
-  const newBPM = 30;
-  setIsActive(false);
-  setIsActiveST(false);
-  setCountdown(selectedTime * 60);
-  setCountdownSettlingTime(selectSettlingTime * 60);
-  clearInterval(intervalId.current);
-  stopAndDisposeLoops(); // stop the audio loops
-  Tone.Transport.stop();
-  setBPM(newBPM);
-  Tone.Transport.bpm.setValueAtTime(newBPM, Tone.now());
-  setFilterLevelDrum(80);
-  setFilterLevelBreath(200);
-  setWetLevel(0);
-};
-
+  const resetTimer = () => {
+    const newBPM = 30;
+    setIsActive(false);
+    setIsActiveST(false);
+    setCountdown(selectedTime * 60);
+    setCountdownSettlingTime(selectSettlingTime * 60);
+    clearInterval(intervalId.current);
+    stopAndDisposeLoops(); // stop the audio loops
+    stopAndDisposeDroneLoops();
+    Tone.Transport.stop();
+    setBPM(newBPM);
+    Tone.Transport.bpm.setValueAtTime(newBPM, Tone.now());
+    setFilterLevelDrum(80);
+    setFilterLevelBreath(200);
+    setWetLevel(0);
+  };
 
   // useEffect Hooks
   // Countdown overall timer
@@ -242,14 +277,16 @@ const resetTimer = () => {
     // This function will help us chain our promises for each audio load
     const loadAllAudios = async () => {
       try {
-          await loadAudio("startGong", startGong);
-          await loadAudio("endGong", endGong);
-          await loadAudio("breath-1", breath1);
-          await loadAudio("breath-2", breath2);
-          await loadAudio("breath-3", breath3);
-          await loadAudio("breath-4", breath4);
-          await loadAudio("ZT-sha-L", ZTShaL);
-          await loadAudio("ZT-sha-R", ZTShaR);
+          await loadAudio("startGong", cl.url('startGong', { resource_type: 'video' }));
+          await loadAudio("endGong", cl.url('endGong', { resource_type: 'video' }));
+          await loadAudio("breath-1", cl.url('breath-1', { resource_type: 'video' }));
+          await loadAudio("breath-2", cl.url('breath-2', { resource_type: 'video' }));
+          await loadAudio("breath-3", cl.url('breath-3', { resource_type: 'video' }));
+          await loadAudio("breath-4", cl.url('breath-4', { resource_type: 'video' }));
+          await loadAudio("ZT-sha-L", cl.url('ZT-sha-L', { resource_type: 'video' }));
+          await loadAudio("ZT-sha-R", cl.url('ZT-sha-R', { resource_type: 'video' }));
+          await loadAudio("ZT-drone-1", cl.url('ZT-drone-1', { resource_type: 'video' }));
+          await loadAudio("ZT-drone-2", cl.url('ZT-drone-2', { resource_type: 'video' }));
           setAudioReady(true);
       } catch (error) {
           console.error('Failed to load audio:', error);
@@ -313,15 +350,23 @@ const resetTimer = () => {
       if (countdownSettlingTime === 4) {
         stopAndDisposeLoops();
       }
+      if (countdownSettlingTime === 0) {
+        setDroneActive(true);
+        droneLoops();
+      }
+      if (countdown === 4) {
+        setDroneActive(false);
+        stopAndDisposeDroneLoops();
+        stopAndDisposeLoops();
+      }
       if (countdown === 0) {
         playSample("endGong", 1);
         clearInterval(intervalId.current);
         setText('🙏');
+        setIsActive(false);
+        Tone.Transport.stop();
         
         const autoReset = setTimeout(() => {
-          setIsActive(false);
-          stopAndDisposeLoops();
-          Tone.Transport.stop();
           setCountdown(selectedTime * 60);
           setCountdownSettlingTime(selectSettlingTime * 60);
           setBPM(newBPM);
@@ -363,7 +408,9 @@ const resetTimer = () => {
                   initializeAudio("breath-3"),
                   initializeAudio("breath-4"),
                   initializeAudio("ZT-sha-L"),
-                  initializeAudio("ZT-sha-R")
+                  initializeAudio("ZT-sha-R"),
+                  initializeAudio("ZT-drone-1"),
+                  initializeAudio("ZT-drone-2")
                 ])
                 .then(() => setAudioInitialized(true))
                 .catch(error => console.error("Failed to initialize audio:", error));

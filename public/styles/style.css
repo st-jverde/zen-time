@@ -5,6 +5,37 @@
     --main-background-color: #0C1618;
  }
 
+ .form-range {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #0C1618;
+  width: 100%;
+  height: 1.5rem;
+  border-radius: 1rem;
+}
+
+.form-range::-webkit-slider-thumb {
+  margin-top: -Xpx; /* Adjust X value to align the thumb with the track */
+  appearance: none;
+  -webkit-appearance: none;
+  width: 25px;
+  height: 25px;
+  background: var(--secondary-color);
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.form-range::-moz-range-thumb {
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: var(--secondary-color);
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+
+
  .toggle {
   display: inline-block;
   position: relative;
@@ -35,5 +66,5 @@
   /* ... (rest of the properties remain the same) ... */
   color: rgba(0, 0, 0, 0.9); /* Adjust if you have a specific variable for text color */
 }
-
-/* ... (rest of the CSS remains the same) ... */
+/* 
+... (rest of the CSS remains the same) ... */

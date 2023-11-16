@@ -9,18 +9,18 @@ import NavbarInfo from './components/NavbarInfo';
 import Main from './components/Main';
 
 const App = () => {
-  const [selectedTime, setSelectedTime] = useState(5);
-  const [selectSettlingTime, setSelectSettlingTime] = useState(1)
+  const [selectedTime, setSelectedTime] = useState(15);
+  const [selectSettlingTime, setSelectSettlingTime] = useState(5)
   const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
 
   // Total meditation time
-  const handleTimeSelect = (time) => {
-    setSelectedTime(time);
+  const handleTimeSelect = (event) => {
+    setSelectedTime(Number(event.target.value));
   };
 
   // Sounds to settle down time
-  const handleSettlingTime = (time) => {
-    setSelectSettlingTime(time);
+  const handleSettlingTime = (event) => {
+    setSelectSettlingTime(Number(event.target.value));
   };
 
   // Handler for when the global volume slider changes

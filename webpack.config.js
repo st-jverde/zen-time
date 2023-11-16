@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const webpack = require('webpack');
+const Dotenv = require('dotenv-webpack');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -25,6 +26,7 @@ module.exports = {
       // Cleanup dist folder
       new CleanWebpackPlugin(),
       new webpack.EnvironmentPlugin(['NODE_ENV']),
+      new Dotenv(),
       new HtmlWebpackPlugin({
         template: './index.html',
         minify: isDevelopment ? false : {

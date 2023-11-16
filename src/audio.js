@@ -4,7 +4,7 @@ const { Player, start, getContext, Buffer } = Tone;
 
 const players = {};
 const audioBuffers = {};
-let reverb, highpassBreath, highpassDrum; 
+let reverb, highpassBreath, highpassDrum, lowpassDrone, highpassDrone; 
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -22,6 +22,9 @@ export const initializeAudio = async (sampleName) => {
         if (getContext().state === "suspended") {
             await getContext().resume();
         }
+        // DRONE FX
+        lowpassDrone = new Tone.Filter(1200, "lowpass");
+        highpassDrone = new Tone.Filter(800, "highpass");
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass")
@@ -55,21 +58,18 @@ export const initializeAudio = async (sampleName) => {
                     highpassDrum.connect(reverb);
                     reverb.toDestination();
                     break;
+                case "ZT-drone-1":
+                case "ZT-drone-2":
+                    players[sampleName].connect(lowpassDrone);
+                    lowpassDrone.connect(highpassDrone);
+                    highpassDrone.connect(reverb);
+                    reverb.toDestination();
+                    break;
                 default:
                     players[sampleName].connect(reverb);
                     reverb.toDestination();
                     break;
             }
-            
-
-            // if (sampleName === "endGong") {
-            //     players[sampleName].toDestination();
-            // } else {
-            //     players[sampleName].connect(highpassBreath);
-            //     highpassBreath.connect(reverb);
-            //     reverb.toDestination();
-            // }
-
         } else if (!audioBuffers[sampleName]) {
             console.error(`Audio buffer for ${sampleName} is not loaded.`);
         }
