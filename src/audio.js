@@ -24,7 +24,8 @@ export const initializeAudio = async (sampleName) => {
         }
         // DRONE FX
         lowpassDrone = new Tone.Filter(1200, "lowpass");
-        highpassDrone = new Tone.Filter(800, "highpass");
+        highpassDrone = new Tone.Filter(600, "highpass");
+        const volumeControl = new Tone.Volume(-3);
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass")
@@ -60,7 +61,8 @@ export const initializeAudio = async (sampleName) => {
                     break;
                 case "ZT-drone-1":
                 case "ZT-drone-2":
-                    players[sampleName].connect(lowpassDrone);
+                    players[sampleName].connect(volumeControl);
+                    volumeControl.connect(lowpassDrone);
                     lowpassDrone.connect(highpassDrone);
                     highpassDrone.connect(reverb);
                     reverb.toDestination();

@@ -43,10 +43,11 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
-  // const droneSamples = ["ZT-drone-1", "ZT-drone-2"];
+  const droneSamples = ["ZT-drone-1", "ZT-drone-2"];
 
   const breathSampleIndex = useRef(0);
   const drumSampleIndex = useRef(0);
+  const droneSampleIndex = useRef(0);
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
   const droneLoopRef = useRef(null);
@@ -143,17 +144,15 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     }, 1000);
   };
   
-  // DRONE LOOPS
-  const onDroneEnd = () => {
-    // Actions to perform when the drone sample ends
-    cleanupDroneLoops();
-    console.log("Drone sample has ended. Next playback will start in 10 seconds.");
-    // You can add logic here if you need to do something specific when the sample ends
-  };
-  
+  // DRONE LOOPS  
   const droneLoops = () => {
-    playSample("ZT-drone-2", 1.0, onDroneEnd);
-    playSample("ZT-drone-1", 1.0, onDroneEnd);
+    droneLoopRef.current = new Tone.Loop((time) => {
+      const rate = getPlaybackRate(BPM);
+
+      playSample(droneSamples[droneSampleIndex.current], rate);
+
+      droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
+    }, "12s").start();
   }
 
   const cleanupDroneLoops = () => {
@@ -184,6 +183,12 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
       drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
     }, "8n").start();
+
+    // droneLoopRef.current = new Tone.Loop((time) => {
+    //   const rate = getPlaybackRate(BPM);
+
+    //   playSample("ZT-drone-1", rate);
+    // }, "10s").start();
   };
 
   const cleanupLoops = () => {
@@ -334,6 +339,8 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   useEffect(() => {
     if (countdownSettlingTime === 0) {
       setIsActiveST(false);
+      setDroneActive(true);
+      droneLoops();
       playSample("startGong", 1);
     }
   }, [countdownSettlingTime]);
@@ -350,10 +357,10 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       if (countdownSettlingTime === 4) {
         stopAndDisposeLoops();
       }
-      if (countdownSettlingTime === 0) {
-        setDroneActive(true);
-        droneLoops();
-      }
+      // if (countdownSettlingTime === 0) {
+      //   setDroneActive(true);
+      //   droneLoops();
+      // }
       if (countdown === 4) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
