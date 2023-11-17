@@ -339,9 +339,14 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   useEffect(() => {
     if (countdownSettlingTime === 0) {
       setIsActiveST(false);
+      playSample("startGong", 1);
+    }
+  }, [countdownSettlingTime]);
+
+  useEffect(() => {
+    if (countdownSettlingTime === 1) {
       setDroneActive(true);
       droneLoops();
-      playSample("startGong", 1);
     }
   }, [countdownSettlingTime]);
 
@@ -357,11 +362,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       if (countdownSettlingTime === 4) {
         stopAndDisposeLoops();
       }
-      // if (countdownSettlingTime === 0) {
-      //   setDroneActive(true);
-      //   droneLoops();
-      // }
-      if (countdown === 4) {
+      if (countdown === 8) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
         stopAndDisposeLoops();
@@ -370,10 +371,10 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
         playSample("endGong", 1);
         clearInterval(intervalId.current);
         setText('🙏');
-        setIsActive(false);
         Tone.Transport.stop();
         
         const autoReset = setTimeout(() => {
+          setIsActive(false);
           setCountdown(selectedTime * 60);
           setCountdownSettlingTime(selectSettlingTime * 60);
           setBPM(newBPM);
