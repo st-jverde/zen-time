@@ -1,6 +1,13 @@
 import React from 'react';
+import VolumeSliders from './VolumeSliders';
+import { setGlobalVolume } from '../audio';
 
 const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSettlingTime }) => {
+  const handleVolumeChange = (volumeValue) => {
+    console.log('Received in Navbar:', volumeValue);
+    setGlobalVolume(volumeValue); 
+  };
+
     return (
         <nav className="navbar navbar-dark bg-ter fixed-top">
         <div className="container-fluid">
@@ -35,6 +42,7 @@ const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSe
                 </li>
               </ul>
             </div>
+            {/* <VolumeSliders onchanhe={handleVolumeChange(e)} /> */}
           </div>
         </div>
       </nav>

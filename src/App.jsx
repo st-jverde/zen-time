@@ -9,8 +9,8 @@ import NavbarInfo from './components/NavbarInfo';
 import Main from './components/Main';
 
 const App = () => {
-  const [selectedTime, setSelectedTime] = useState(15);
-  const [selectSettlingTime, setSelectSettlingTime] = useState(5)
+  const [selectedTime, setSelectedTime] = useState(10);
+  const [selectSettlingTime, setSelectSettlingTime] = useState(1)
   const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
 
   // Total meditation time

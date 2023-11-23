@@ -1,7 +1,7 @@
 // VolumeSlider.jsx
 import React, { useState } from 'react';
 
-const VolumeSlider = ({ onChange }) => {
+const VolumeSliders = ({ onChange }) => {
     const [volume, setVolume] = useState(-12);
 
     const handleSliderChange = (e) => {
@@ -31,4 +31,4 @@ const VolumeSlider = ({ onChange }) => {
     );
 };
 
-export default VolumeSlider;
+export default VolumeSliders;

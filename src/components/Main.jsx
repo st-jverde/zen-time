@@ -14,15 +14,6 @@ import '../tailwind.css';
 
 import cl from '../../cloudinaryConfig';
 
-// import startGong from '../samples/ZT-start-gong.mp3';
-// import endGong from '../samples/ZT-end-gong.mp3';
-// import breath1 from '../samples/breath-1.mp3';
-// import breath2 from '../samples/breath-2.mp3';
-// import breath3 from '../samples/breath-3.mp3';
-// import breath4 from '../samples/breath-4.mp3';
-// import ZTShaL from '../samples/ZT-sha-L.mp3';
-// import ZTShaR from '../samples/ZT-sha-R.mp3';
-
 const noSleep = new NoSleep();
 
 const Main = ({ selectedTime, selectSettlingTime }) => {
@@ -47,10 +38,11 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
   const breathSampleIndex = useRef(0);
   const drumSampleIndex = useRef(0);
-  const droneSampleIndex = useRef(0);
+  // const droneSampleIndex = useRef(0);
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
   const droneLoopRef = useRef(null);
+  const droneLoopRef60 = useRef(null);
 
   let intervalId = useRef(null); // ID of the interval to clear it later
 
@@ -126,17 +118,17 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
         }
         return currentBPM;
       });
-      console.log("BPM: ", currentBPM);
+      // console.log("BPM: ", currentBPM);
       
-      console.log("filterIncrease breath: ", filterIncreaseBreath);
-      console.log("currentFilter breath: ", currentFilterBreath);
+      // console.log("filterIncrease breath: ", filterIncreaseBreath);
+      // console.log("currentFilter breath: ", currentFilterBreath);
       increaseFilterBreathFrequency(currentFilterBreath);
 
-      console.log("filterIncrease Drum: ", filterIncreaseDrum);
-      console.log("currentFilter Drum: ", currentFilterDrum);
+      // console.log("filterIncrease Drum: ", filterIncreaseDrum);
+      // console.log("currentFilter Drum: ", currentFilterDrum);
       increaseFilterDrumFrequency(currentFilterDrum);
 
-      console.log("wetLevel: ", currentWetLevel);
+      // console.log("wetLevel: ", currentWetLevel);
       setReverbWetLevel(currentWetLevel);
 
       // Update Tone.Transport's BPM
@@ -147,16 +139,21 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   // DRONE LOOPS  
   const droneLoops = () => {
     droneLoopRef.current = new Tone.Loop((time) => {
-      const rate = getPlaybackRate(BPM);
+      playSample(droneSamples[1], 0.2);
 
-      playSample(droneSamples[droneSampleIndex.current], rate);
+      // droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
+    }, "4s").start();
 
-      droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
-    }, "12s").start();
+    droneLoopRef60.current = new Tone.Loop((time) => {
+      playSample(droneSamples[0], 0.1);
+
+      // droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
+    }, "1n").start();
   }
 
   const cleanupDroneLoops = () => {
     droneLoopRef.current?.stop(0);
+    droneLoopRef60.current?.stop(0);
   }
 
   const stopAndDisposeDroneLoops = () => {
@@ -164,6 +161,11 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       droneLoopRef.current.stop(0);
       droneLoopRef.current.dispose();
       droneLoopRef.current = null;
+    }
+    if (droneLoopRef60.current) {
+      droneLoopRef60.current.stop(0);
+      droneLoopRef60.current.dispose();
+      droneLoopRef60.current = null;
     }
   }
   
@@ -183,12 +185,6 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
       drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
     }, "8n").start();
-
-    // droneLoopRef.current = new Tone.Loop((time) => {
-    //   const rate = getPlaybackRate(BPM);
-
-    //   playSample("ZT-drone-1", rate);
-    // }, "10s").start();
   };
 
   const cleanupLoops = () => {
@@ -326,7 +322,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
   useEffect(() => {
     if (!isActive) {
-      setText('Press Start to begin');
+      setText('Press "Start" to begin');
     } else {
       if (countdown && countdownSettlingTime > 0) {
         setText(`🎧 Settle down (${selectSettlingTime} min)`);
@@ -339,16 +335,17 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   useEffect(() => {
     if (countdownSettlingTime === 0) {
       setIsActiveST(false);
-      playSample("startGong", 1);
+      playSample("startGong");
     }
   }, [countdownSettlingTime]);
 
   useEffect(() => {
-    if (countdownSettlingTime === 1) {
-      setDroneActive(true);
+    if (isActive) {
       droneLoops();
+    } else {
+      cleanupDroneLoops();
     }
-  }, [countdownSettlingTime]);
+  }, [isActive]);
 
 
   useEffect(() => { 
@@ -356,16 +353,17 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     if (isActive) {
       if (countdown === countdownSettlingTime) {
         setBPM(newBPM);
-        playSample("startGong");
+        playSample("startGong", 1);
         initiateLoops();
+        setDroneActive(true);
       }
-      if (countdownSettlingTime === 4) {
+      if (countdownSettlingTime === 1) {
         stopAndDisposeLoops();
       }
-      if (countdown === 8) {
+      if (countdown === 100) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
-        stopAndDisposeLoops();
+        // stopAndDisposeLoops();
       }
       if (countdown === 0) {
         playSample("endGong", 1);

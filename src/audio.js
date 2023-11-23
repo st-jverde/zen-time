@@ -4,7 +4,10 @@ const { Player, start, getContext, Buffer } = Tone;
 
 const players = {};
 const audioBuffers = {};
-let reverb, highpassBreath, highpassDrum, lowpassDrone, highpassDrone; 
+let reverb;
+let highpassBreath;
+let highpassDrum;
+let lowpassDrone, highpassDrone, droneReverb, droneStereoDelay, droneVolumeControl; 
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -23,9 +26,12 @@ export const initializeAudio = async (sampleName) => {
             await getContext().resume();
         }
         // DRONE FX
-        lowpassDrone = new Tone.Filter(1200, "lowpass");
-        highpassDrone = new Tone.Filter(600, "highpass");
-        const volumeControl = new Tone.Volume(-3);
+        lowpassDrone = new Tone.Filter(600, "lowpass");
+        highpassDrone = new Tone.Filter(150, "highpass");
+        droneReverb = new Tone.Reverb(15)
+        droneReverb.wet.value = 1;
+        droneVolumeControl = new Tone.Volume(-9);
+        droneStereoDelay = new Tone.FeedbackDelay("4n", 0.5);
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass")
@@ -61,11 +67,12 @@ export const initializeAudio = async (sampleName) => {
                     break;
                 case "ZT-drone-1":
                 case "ZT-drone-2":
-                    players[sampleName].connect(volumeControl);
-                    volumeControl.connect(lowpassDrone);
+                    players[sampleName].connect(droneVolumeControl);
+                    droneVolumeControl.connect(lowpassDrone);
                     lowpassDrone.connect(highpassDrone);
-                    highpassDrone.connect(reverb);
-                    reverb.toDestination();
+                    highpassDrone.connect(droneStereoDelay);
+                    droneStereoDelay.connect(droneReverb);
+                    droneReverb.toDestination();
                     break;
                 default:
                     players[sampleName].connect(reverb);
@@ -79,6 +86,12 @@ export const initializeAudio = async (sampleName) => {
     } catch (error) {
         console.error(`Error initializing audio for ${sampleName}:`, error);
         throw new Error(`Error initializing audio for ${sampleName}: ${error.message}`);
+    }
+};
+
+export const handleDroneVolume = (value) => {
+    if (droneVolumeControl) {
+        droneVolumeControl.Volume.value = value;
     }
 };
 
