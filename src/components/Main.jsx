@@ -34,11 +34,11 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
-  const droneSamples = ["ZT-drone-1", "ZT-drone-2"];
+  const droneSamples = ["ZT-drone-1", "ZT-drone-2", "ZT-drone-2", "ZT-drone-2"];
 
   const breathSampleIndex = useRef(0);
   const drumSampleIndex = useRef(0);
-  // const droneSampleIndex = useRef(0);
+  const droneSampleIndex = useRef(0);
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
   const droneLoopRef = useRef(null);
@@ -139,14 +139,13 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   // DRONE LOOPS  
   const droneLoops = () => {
     droneLoopRef.current = new Tone.Loop((time) => {
-      playSample(droneSamples[1], 0.2);
+      playSample(droneSampleIndex.current, 1);
 
-      // droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
-    }, "4s").start();
+      droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
+    }, "2n").start();
 
     droneLoopRef60.current = new Tone.Loop((time) => {
-      playSample(droneSamples[0], 0.1);
-
+      playSample(droneSamples[1], 0.67);
       // droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
     }, "1n").start();
   }
@@ -225,10 +224,12 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       adjustEffects(); // start BPM/FX adjustment
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
-      const delayStart = setTimeout(() => initiateLoops(), 2000);
-      if (droneActive) {
-        droneLoops();
-      }
+      const delayStart = setTimeout(() => {
+        initiateLoops()
+        if (droneActive) {
+          droneLoops();
+        }
+      }, 2000);
       Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
@@ -354,13 +355,16 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       if (countdown === countdownSettlingTime) {
         setBPM(newBPM);
         playSample("startGong", 1);
-        initiateLoops();
-        setDroneActive(true);
+        // initiateLoops();
+        const delayStart = setTimeout(() => {
+          setDroneActive(true);
+        }, 2000);
+        return () => clearTimeout(delayStart);
       }
       if (countdownSettlingTime === 1) {
         stopAndDisposeLoops();
       }
-      if (countdown === 100) {
+      if (countdown === 10) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
         // stopAndDisposeLoops();

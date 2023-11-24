@@ -7,7 +7,7 @@ const audioBuffers = {};
 let reverb;
 let highpassBreath;
 let highpassDrum;
-let lowpassDrone, highpassDrone, droneReverb, droneStereoDelay, droneVolumeControl; 
+let lowpassDrone, highpassDrone, droneReverb, droneStereoDelay, droneLimiter, droneVolumeControl; 
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -28,10 +28,11 @@ export const initializeAudio = async (sampleName) => {
         // DRONE FX
         lowpassDrone = new Tone.Filter(600, "lowpass");
         highpassDrone = new Tone.Filter(150, "highpass");
-        droneReverb = new Tone.Reverb(15)
+        droneReverb = new Tone.Reverb(9)
         droneReverb.wet.value = 1;
-        droneVolumeControl = new Tone.Volume(-9);
-        droneStereoDelay = new Tone.FeedbackDelay("4n", 0.5);
+        droneLimiter = new Tone.Limiter(-12);
+        droneVolumeControl = new Tone.Volume(-12);
+        droneStereoDelay = new Tone.FeedbackDelay("2n", 0.2);
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass")
@@ -70,9 +71,10 @@ export const initializeAudio = async (sampleName) => {
                     players[sampleName].connect(droneVolumeControl);
                     droneVolumeControl.connect(lowpassDrone);
                     lowpassDrone.connect(highpassDrone);
-                    highpassDrone.connect(droneStereoDelay);
-                    droneStereoDelay.connect(droneReverb);
-                    droneReverb.toDestination();
+                    highpassDrone.connect(droneReverb);
+                    droneReverb.connect(droneStereoDelay);
+                    droneStereoDelay.connect(droneLimiter);
+                    droneLimiter.toDestination();
                     break;
                 default:
                     players[sampleName].connect(reverb);
