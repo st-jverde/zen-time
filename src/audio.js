@@ -69,25 +69,8 @@ export const initializeAudio = async (sampleName) => {
                     highpassDrum.connect(reverb);
                     reverb.toDestination();
                     break;
-                // case "ZT-drone-1":
-                // case "ZT-drone-2":
-                //     players[sampleName].connect(droneVolumeControl);
-                //     droneVolumeControl.connect(lowpassDrone);
-                //     lowpassDrone.connect(highpassDrone);
-                //     highpassDrone.connect(droneReverb);
-                //     droneReverb.connect(droneFreeverb);
-                //     droneFreeverb.connect(droneLimiter);
-                //     droneLimiter.toDestination();
-                //     break;
                 case "ZT-drone-1":
                 case "ZT-drone-2":
-                    players[sampleName] = new Tone.GrainPlayer({
-                        url: audioBuffers[sampleName],
-                        grainSize: 0.05,
-                        overlap: 0.025,
-                        detune: 0,
-                        playbackRate: 0.67,
-                    });
                     players[sampleName].connect(droneVolumeControl);
                     droneVolumeControl.connect(lowpassDrone);
                     lowpassDrone.connect(highpassDrone);
@@ -96,6 +79,26 @@ export const initializeAudio = async (sampleName) => {
                     droneFreeverb.connect(droneLimiter);
                     droneLimiter.toDestination();
                     break;
+                // case "ZT-drone-1":
+                // case "ZT-drone-2":
+                //     players[sampleName] = new Tone.GrainPlayer({
+                //         url: audioBuffers[sampleName],
+                //         grainSize: 0.05,
+                //         overlap: 0.025,
+                //         detune: 0,
+                //         loop: true,
+                //         loopStart: 1,
+                //         loopEnd: 3,
+                //         playbackRate: 0.67,
+                //     });
+                //     players[sampleName].connect(droneVolumeControl);
+                //     droneVolumeControl.connect(lowpassDrone);
+                //     lowpassDrone.connect(highpassDrone);
+                //     highpassDrone.connect(droneReverb);
+                //     droneReverb.connect(droneFreeverb);
+                //     droneFreeverb.connect(droneLimiter);
+                //     droneLimiter.toDestination();
+                //     break;
                 default:
                     players[sampleName].connect(reverb);
                     reverb.toDestination();
@@ -161,6 +164,15 @@ export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
     }
 };
 
+// export const stopAndDisposeSamples = () => {
+//     for (const sampleName in players) {
+//         if (players[sampleName]) {
+//             players[sampleName].stop();
+//             // players[sampleName].dispose();
+//             // players[sampleName] = null;
+//         }
+//     }
+// };
 
 // Utility to set global volume
 export const setGlobalVolume = (volumeValue) => {

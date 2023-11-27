@@ -8,7 +8,8 @@ import {
   playSample,
   increaseFilterBreathFrequency,
   increaseFilterDrumFrequency,
-  setReverbWetLevel 
+  setReverbWetLevel,
+  // stopAndDisposeSamples 
 } from '../audio';
 import '../tailwind.css';
 
@@ -139,23 +140,26 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   // DRONE LOOPS  
   const droneLoops = () => {
     droneLoopRef.current = new Tone.Loop((time) => {
-      playSample(droneSamples[0]);
+      playSample(droneSamples[0], 0.67);
 
       // droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
-    }, "1n").start();
+    }, "1n").start("+1");
 
     droneLoopRef60.current = new Tone.Loop((time) => {
-      playSample(droneSamples[1]);
+      playSample(droneSamples[1], 0.67);
       // droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
-    }, "2n").start();
-  }
+    }, "4n").start();
+  };
 
   const cleanupDroneLoops = () => {
+    // stopAndDisposeSamples();
     droneLoopRef.current?.stop(0);
     droneLoopRef60.current?.stop(0);
-  }
+  };
 
   const stopAndDisposeDroneLoops = () => {
+    // stopAndDisposeSamples();
+
     if (droneLoopRef.current) {
       droneLoopRef.current.stop(0);
       droneLoopRef.current.dispose();
@@ -166,7 +170,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       droneLoopRef60.current.dispose();
       droneLoopRef60.current = null;
     }
-  }
+  };
   
   // SETTLING DOWN LOOPS
   const initiateLoops = () => {
@@ -220,11 +224,12 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     if (!isActive) {
       setIsActive(true); // Set the countdown active
       setIsActiveST(true);
+      setDroneActive(true);
       noSleep.enable();
       adjustEffects(); // start BPM/FX adjustment
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
-      const delayStart = setTimeout(() => {
+      const delayStart =  setTimeout(() => {
         initiateLoops()
         if (droneActive) {
           droneLoops();
@@ -354,12 +359,9 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     if (isActive) {
       if (countdown === countdownSettlingTime) {
         setBPM(newBPM);
-        playSample("startGong", 1);
-        // initiateLoops();
-        const delayStart = setTimeout(() => {
-          setDroneActive(true);
-        }, 2000);
-        return () => clearTimeout(delayStart);
+        adjustEffects();
+        Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
+        playSample("startGong");
       }
       if (countdownSettlingTime === 1) {
         stopAndDisposeLoops();
