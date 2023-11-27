@@ -34,11 +34,11 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];
-  const droneSamples = ["ZT-drone-1", "ZT-drone-2", "ZT-drone-2", "ZT-drone-2"];
+  const droneSamples = ["ZT-drone-1", "ZT-drone-2"];
 
   const breathSampleIndex = useRef(0);
   const drumSampleIndex = useRef(0);
-  const droneSampleIndex = useRef(0);
+  // const droneSampleIndex = useRef(0);
   const breathLoopRef = useRef(null);
   const drumLoopRef = useRef(null);
   const droneLoopRef = useRef(null);
@@ -139,15 +139,15 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   // DRONE LOOPS  
   const droneLoops = () => {
     droneLoopRef.current = new Tone.Loop((time) => {
-      playSample(droneSampleIndex.current, 1);
+      playSample(droneSamples[0]);
 
-      droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
-    }, "2n").start();
-
-    droneLoopRef60.current = new Tone.Loop((time) => {
-      playSample(droneSamples[1], 0.67);
       // droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
     }, "1n").start();
+
+    droneLoopRef60.current = new Tone.Loop((time) => {
+      playSample(droneSamples[1]);
+      // droneSampleIndex.current = (droneSampleIndex.current + 1) % droneSamples.length;
+    }, "2n").start();
   }
 
   const cleanupDroneLoops = () => {

@@ -7,7 +7,7 @@ const audioBuffers = {};
 let reverb;
 let highpassBreath;
 let highpassDrum;
-let lowpassDrone, highpassDrone, droneReverb, droneStereoDelay, droneLimiter, droneVolumeControl; 
+let lowpassDrone, highpassDrone, droneReverb, droneFreeverb, droneLimiter, droneVolumeControl; 
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -31,8 +31,11 @@ export const initializeAudio = async (sampleName) => {
         droneReverb = new Tone.Reverb(9)
         droneReverb.wet.value = 1;
         droneLimiter = new Tone.Limiter(-12);
-        droneVolumeControl = new Tone.Volume(-12);
-        droneStereoDelay = new Tone.FeedbackDelay("2n", 0.2);
+        droneVolumeControl = new Tone.Volume(-24);
+        droneFreeverb = new Tone.Freeverb({
+            roomSize: 0.8,
+            dampening: 500
+        })
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass")
@@ -66,14 +69,31 @@ export const initializeAudio = async (sampleName) => {
                     highpassDrum.connect(reverb);
                     reverb.toDestination();
                     break;
+                // case "ZT-drone-1":
+                // case "ZT-drone-2":
+                //     players[sampleName].connect(droneVolumeControl);
+                //     droneVolumeControl.connect(lowpassDrone);
+                //     lowpassDrone.connect(highpassDrone);
+                //     highpassDrone.connect(droneReverb);
+                //     droneReverb.connect(droneFreeverb);
+                //     droneFreeverb.connect(droneLimiter);
+                //     droneLimiter.toDestination();
+                //     break;
                 case "ZT-drone-1":
                 case "ZT-drone-2":
+                    players[sampleName] = new Tone.GrainPlayer({
+                        url: audioBuffers[sampleName],
+                        grainSize: 0.05,
+                        overlap: 0.025,
+                        detune: 0,
+                        playbackRate: 0.67,
+                    });
                     players[sampleName].connect(droneVolumeControl);
                     droneVolumeControl.connect(lowpassDrone);
                     lowpassDrone.connect(highpassDrone);
                     highpassDrone.connect(droneReverb);
-                    droneReverb.connect(droneStereoDelay);
-                    droneStereoDelay.connect(droneLimiter);
+                    droneReverb.connect(droneFreeverb);
+                    droneFreeverb.connect(droneLimiter);
                     droneLimiter.toDestination();
                     break;
                 default:
