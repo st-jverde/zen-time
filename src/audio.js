@@ -7,7 +7,8 @@ const audioBuffers = {};
 let reverb;
 let highpassBreath;
 let highpassDrum;
-let lowpassDrone, highpassDrone, droneReverb, droneFreeverb, droneLimiter, droneVolumeControl; 
+let lowpassDrone, highpassDrone, droneReverb, droneFreeverb, droneLimiter; 
+export let droneVolumeControl = new Tone.Volume(-72);
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -31,7 +32,7 @@ export const initializeAudio = async (sampleName) => {
         droneReverb = new Tone.Reverb(9)
         droneReverb.wet.value = 1;
         droneLimiter = new Tone.Limiter(-12);
-        droneVolumeControl = new Tone.Volume(-24);
+        // droneVolumeControl = new Tone.Volume(0);
         droneFreeverb = new Tone.Freeverb({
             roomSize: 0.8,
             dampening: 500
@@ -115,10 +116,15 @@ export const initializeAudio = async (sampleName) => {
 };
 
 export const handleDroneVolume = (value) => {
+    // const linearValue = Math.pow(10, value / 20); // Convert dB to linear scale
+    // console.log("linearValue: ", linearValue);
     if (droneVolumeControl) {
-        droneVolumeControl.Volume.value = value;
+        const linearValue = droneVolumeControl.volume.value = value;
+        console.log("db: ", linearValue);
     }
 };
+
+
 
 // Utility function to increase the filter frequency
 export const increaseFilterBreathFrequency = (value) => {
