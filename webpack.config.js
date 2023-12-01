@@ -25,8 +25,7 @@ module.exports = {
     plugins: [
       // Cleanup dist folder
       new CleanWebpackPlugin(),
-      new webpack.EnvironmentPlugin(['NODE_ENV', 'REACT_APP_CLOUDINARY_CLOUD_NAME']),
-      // new webpack.EnvironmentPlugin(['NODE_ENV']),
+      isDevelopment ? new webpack.EnvironmentPlugin(['NODE_ENV']) : new webpack.EnvironmentPlugin(['NODE_ENV', 'REACT_APP_CLOUDINARY_CLOUD_NAME']),
       new Dotenv(),
       new HtmlWebpackPlugin({
         template: './index.html',

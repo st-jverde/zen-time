@@ -33,7 +33,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const [wetLevel, setWetLevel] = useState(0);
   const [filterLevelBreath, setFilterLevelBreath] = useState(200);
   const [filterLevelDrum, setFilterLevelDrum] = useState(80);
-  const [droneVolume, setDroneVolume] = useState(-50);
+  const [droneVolume, setDroneVolume] = useState(-47);
   const [droneVolumeDownActive, setDroneVolumeDownActive] = useState(false)
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
@@ -74,7 +74,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
     // FOR VOLUME CHANGE
     let currentVolume = droneVolume;
-    const endVolumeFirstPhase = -20;
+    const endVolumeFirstPhase = -21;
     const volumeIncreaseRateFirstPhase = (endVolumeFirstPhase - currentVolume) / durationInSeconds;
 
     intervalId.current = setInterval(() => {
@@ -162,7 +162,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const volumeDown = () => {
     const remainingTime = (selectedTime * 60) - (selectSettlingTime * 60);
     let currentVolume = droneVolume;
-    const endVolumeSecondPhase = -75;
+    const endVolumeSecondPhase = -83;
     
     const volumeDecreaseRateSecondPhase = (endVolumeSecondPhase - currentVolume) / remainingTime; // Calculate remainingTime
     // console.log("volumeDecreaseRateSecondPhase: ", volumeDecreaseRateSecondPhase);
@@ -254,6 +254,8 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     drumSampleIndex.current = 0;
   };
 
+  let delayStart;
+
   const toggleTimer = async () => {
     if (Tone && Tone.context && Tone.context.state !== 'running') {
       try {
@@ -271,15 +273,17 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       noSleep.enable();
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
+      if (countdownSettlingTime > 4) {
+        delayStart = setTimeout(() => {
+          initiateLoops()
+        }, 2000);
+      }
       if (droneVolumeDownActive) {
         volumeDown();
       }
-      const delayStart =  setTimeout(() => {
-        initiateLoops()
-        if (droneActive) {
-          droneLoops();
-        }
-      }, 2000);
+      if (droneActive) {
+        droneLoops();
+      }
       Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
@@ -381,7 +385,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       setText('Press "Start" to begin');
     } else {
       if (countdown && countdownSettlingTime > 0) {
-        setText(`🎧 Settle down (${selectSettlingTime} min)`);
+        setText(`Settling down: ${selectSettlingTime} min`);
       } else if (countdown > 0 && countdownSettlingTime === 0) {
         setText('🧘');
       } 
@@ -421,7 +425,6 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       if (countdown === 10) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
-        // stopAndDisposeLoops();
       }
       if (countdown === 0) {
         playSample("endGong", 1);
