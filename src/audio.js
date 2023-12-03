@@ -7,7 +7,7 @@ const audioBuffers = {};
 let reverb;
 let highpassBreath;
 let highpassDrum;
-let lowpassDrone, highpassDrone, droneReverb, droneFreeverb; 
+let lowpassDrone, highpassDrone, droneReverb; 
 
 export let droneVolumeControl = new Tone.Volume(-72);
 
@@ -27,15 +27,16 @@ export const initializeAudio = async (sampleName) => {
         if (getContext().state === "suspended") {
             await getContext().resume();
         }
+        Tone.Destination.volume.value = -6;
         // DRONE FX
-        lowpassDrone = new Tone.Filter(600, "lowpass");
+        lowpassDrone = new Tone.Filter(500, "lowpass");
         highpassDrone = new Tone.Filter(150, "highpass");
         droneReverb = new Tone.Reverb(9)
         droneReverb.wet.value = 1;
-        droneFreeverb = new Tone.Freeverb({
-            roomSize: 0.8,
-            dampening: 500
-        })
+        // droneFreeverb = new Tone.Freeverb({
+        //     roomSize: 0.8,
+        //     dampening: 500
+        // })
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass")
@@ -73,8 +74,8 @@ export const initializeAudio = async (sampleName) => {
                 case "ZT-drone-2":
                     players[sampleName].connect(lowpassDrone);
                     lowpassDrone.connect(highpassDrone);
-                    highpassDrone.connect(droneFreeverb);
-                    droneFreeverb.connect(droneReverb);
+                    // highpassDrone.connect(droneFreeverb);
+                    highpassDrone.connect(droneReverb);
                     droneReverb.connect(droneVolumeControl);
                     droneVolumeControl.toDestination();
                     break;

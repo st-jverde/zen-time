@@ -74,7 +74,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
     // FOR VOLUME CHANGE
     let currentVolume = droneVolume;
-    const endVolumeFirstPhase = -21;
+    const endVolumeFirstPhase = -18;
     const volumeIncreaseRateFirstPhase = (endVolumeFirstPhase - currentVolume) / durationInSeconds;
 
     intervalId.current = setInterval(() => {
