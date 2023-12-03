@@ -24,10 +24,10 @@ const App = () => {
   };
 
   // Handler for when the global volume slider changes
-  const handleGlobalVolumeChange = (event) => {
-    const volumeValue = event.target.value;
-    setGlobalVolume(volumeValue);
-  };
+  // const handleGlobalVolumeChange = (event) => {
+  //   const volumeValue = event.target.value;
+  //   setGlobalVolume(volumeValue);
+  // };
 
   return (
     <div className="flex h-screen flex-col">
@@ -37,7 +37,8 @@ const App = () => {
         onSettlingTimeSelect={handleSettlingTime}
         selectSettlingTime={selectSettlingTime} 
         globalVolume={globalVolume} 
-        handleGlobalVolumeChange={handleGlobalVolumeChange} />
+      />
+        {/* {handleGlobalVolumeChange={handleGlobalVolumeChange} />} */}
       <Main 
         selectedTime={selectedTime}
         selectSettlingTime={selectSettlingTime} 
