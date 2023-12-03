@@ -33,7 +33,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const [wetLevel, setWetLevel] = useState(0);
   const [filterLevelBreath, setFilterLevelBreath] = useState(200);
   const [filterLevelDrum, setFilterLevelDrum] = useState(80);
-  const [droneVolume, setDroneVolume] = useState(-47);
+  const [droneVolume, setDroneVolume] = useState(-35);
   const [droneVolumeDownActive, setDroneVolumeDownActive] = useState(false)
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
@@ -74,7 +74,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
 
     // FOR VOLUME CHANGE
     let currentVolume = droneVolume;
-    const endVolumeFirstPhase = -18;
+    const endVolumeFirstPhase = -9;
     const volumeIncreaseRateFirstPhase = (endVolumeFirstPhase - currentVolume) / durationInSeconds;
 
     intervalId.current = setInterval(() => {
