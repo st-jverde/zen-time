@@ -24,8 +24,12 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const [countdownSettlingTime, setCountdownSettlingTime] = useState(selectSettlingTime * 60);
   const [isActiveST, setIsActiveST] = useState(false);
   const [isActive, setIsActive] = useState(false);
+  const [resetActive, setResetActive] = useState(false);
   const [droneActive, setDroneActive] = useState(false);
   const [text, setText] = useState('Press Start');
+
+  const [adjustmentsNeeded, setAdjustmentsNeeded] = useState(false);
+  const [resetTriggered, setResetTriggered] = useState(false);
 
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
@@ -48,6 +52,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const droneLoopRef = useRef(null);
   const droneLoopRef60 = useRef(null);
 
+
   let intervalId = useRef(null); // ID of the interval to clear it later
   let secondPhaseInterval = useRef(null);
 
@@ -65,15 +70,15 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     const quarterTime = (durationInSeconds / 4) * 1000;
 
     // Filter
-    let currentFilterBreath = filterLevelBreath;
-    let currentFilterDrum = filterLevelDrum;
+    let currentFilterBreath = 200;
+    let currentFilterDrum = 80;
 
     // Update filter frequency based on the remaining time
     const filterIncreaseBreath = (5000 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
     const filterIncreaseDrum = (1000 - currentFilterDrum) / durationInSeconds; // Going from 100hz to 6000hz
 
     // FOR VOLUME CHANGE
-    let currentVolume = droneVolume;
+    let currentVolume = -35;
     const endVolumeFirstPhase = -9;
     const volumeIncreaseRateFirstPhase = (endVolumeFirstPhase - currentVolume) / durationInSeconds;
 
@@ -119,7 +124,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       }, quarterTime);
 
       //Reverb
-      let currentWetLevel = wetLevel;
+      let currentWetLevel = 0;
       // Calculate the increase per second based on the selected time
       const increasePerSecond = 1 / durationInSeconds
       
@@ -157,6 +162,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
     }, 1000);
   };
+  
 
   // Drone volume to 0db
   const volumeDown = () => {
@@ -254,6 +260,36 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     drumSampleIndex.current = 0;
   };
 
+  const resetTimer = () => {
+    // Stop all audio-related processes
+    stopAndDisposeLoops();
+    stopAndDisposeDroneLoops();
+    clearInterval(intervalId.current);
+    clearInterval(secondPhaseInterval.current);
+    Tone.Transport.stop();
+  
+    // Reset state values to their initial settings
+    const initialBPM = 30;
+    const initialWetLevel = 0;
+    const initialFilterLevelBreath = 200;
+    const initialFilterLevelDrum = 80;
+  
+    setBPM(initialBPM);
+    setWetLevel(initialWetLevel);
+    setFilterLevelBreath(initialFilterLevelBreath);
+    setFilterLevelDrum(initialFilterLevelDrum);
+    setDroneVolumeDownActive(false);
+    setIsActive(false);
+    setIsActiveST(false);
+    setCountdown(selectedTime * 60);
+    setCountdownSettlingTime(selectSettlingTime * 60);
+    // Apply the reset BPM to Tone.Transport
+    Tone.Transport.bpm.setValueAtTime(initialBPM, Tone.now());
+  };
+  
+  // The useEffect hooks would then react to these state changes.
+  
+
   let delayStart;
 
   const toggleTimer = async () => {
@@ -265,8 +301,9 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
         return;
       }
     }
+    // Start
     if (!isActive) {
-      adjustEffects(); // start BPM/FX adjustment
+      adjustEffects();
       setIsActive(true); // Set the countdown active
       setIsActiveST(true);
       setDroneActive(true);
@@ -287,43 +324,42 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
-      if (isActiveST) {
-        setIsActiveST(false);
-      }
-      if (droneActive) {
-        cleanupDroneLoops();
-      }
-      if (droneVolumeDownActive) {
-        clearInterval(secondPhaseInterval.current);
-      }
-      setIsActive(false); // Set the countdown inactive
-      clearInterval(intervalId.current);
-      cleanupLoops();
-      Tone.Transport.stop();
-      noSleep.disable();
+      // Reset
+      setCountdown(0);
+      resetTimer();
     }
   };
 
-  const resetTimer = () => {
-    const newBPM = 30;
-    setIsActive(false);
-    setIsActiveST(false);
-    setDroneVolumeDownActive(false);
-    setCountdown(selectedTime * 60);
-    setCountdownSettlingTime(selectSettlingTime * 60);
-    clearInterval(intervalId.current);
-    clearInterval(secondPhaseInterval.current);
-    stopAndDisposeLoops(); // stop the audio loops
-    stopAndDisposeDroneLoops();
-    Tone.Transport.stop();
-    setBPM(newBPM);
-    Tone.Transport.bpm.setValueAtTime(newBPM, Tone.now());
-    setFilterLevelDrum(80);
-    setFilterLevelBreath(200);
-    setWetLevel(0);
-  };
-
   // useEffect Hooks
+
+   // Handle adjustments
+  //  useEffect(() => {
+  //   if (adjustmentsNeeded) {
+  //     const { BPM, filterLevelBreath, filterLevelDrum, wetLevel, droneVolume } = effectValuesRef.current;
+
+  //     setBPM(BPM);
+  //     setFilterLevelBreath(filterLevelBreath);
+  //     setFilterLevelDrum(filterLevelDrum);
+  //     setWetLevel(wetLevel);
+  //     setDroneVolume(droneVolume);
+
+  //     setAdjustmentsNeeded(false);
+  //   }
+  // }, [adjustmentsNeeded]);
+
+  // // Handle reset
+  // useEffect(() => {
+  //   if (resetTriggered) {
+  //     setBPM(30);
+  //     setFilterLevelBreath(200);
+  //     setFilterLevelDrum(80);
+  //     setWetLevel(0);
+  //     setDroneVolume(-35);
+
+  //     setResetTriggered(false);
+  //   }
+  // }, [resetTriggered]);
+
   // Countdown overall timer
   useEffect(() => {
     setCountdown(selectedTime * 60);
@@ -408,7 +444,6 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       cleanupDroneLoops();
     }
   }, [isActive]);
-
 
   useEffect(() => { 
     const newBPM = 30;
@@ -505,13 +540,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
               onClick={toggleTimer}
               className="mr-4 bg-sec hover:bg-ter text-ter hover:text-sec px-4 py-2 rounded"
             >
-              {isActive ? 'Pause' : 'Start'}
-            </button>
-            <button
-              onClick={resetTimer}
-              className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
-            >
-              Reset
+              {isActive ? 'Reset' : 'Start'}
             </button>
           </>
         )}
