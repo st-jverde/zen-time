@@ -9,8 +9,10 @@ import {
   increaseFilterBreathFrequency,
   increaseFilterDrumFrequency,
   setReverbWetLevel,
-  handleDroneVolume
-  // stopAndDisposeSamples 
+  handleDroneVolume, 
+  openMic, 
+  closeMic,
+  setMicVolume 
 } from '../audio';
 import '../tailwind.css';
 
@@ -24,12 +26,11 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const [countdownSettlingTime, setCountdownSettlingTime] = useState(selectSettlingTime * 60);
   const [isActiveST, setIsActiveST] = useState(false);
   const [isActive, setIsActive] = useState(false);
-  const [resetActive, setResetActive] = useState(false);
   const [droneActive, setDroneActive] = useState(false);
   const [text, setText] = useState('Press Start');
 
-  const [adjustmentsNeeded, setAdjustmentsNeeded] = useState(false);
-  const [resetTriggered, setResetTriggered] = useState(false);
+  const [micVolume, setMicVolumeState] = useState(0);
+  const [isMicOpen, setIsMicOpen] = useState(false);
 
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
@@ -78,7 +79,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     const filterIncreaseDrum = (1000 - currentFilterDrum) / durationInSeconds; // Going from 100hz to 6000hz
 
     // FOR VOLUME CHANGE
-    let currentVolume = -35;
+    let currentVolume = -30;
     const endVolumeFirstPhase = -9;
     const volumeIncreaseRateFirstPhase = (endVolumeFirstPhase - currentVolume) / durationInSeconds;
 
@@ -184,6 +185,28 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       // console.log("volumeValue-final: ", currentVolume);
     }, 1000);
   };
+
+  // Volume up before end gong
+
+  let lastPhaseInterval = useRef(null);
+
+  const volumeUpEnd = () => {
+    clearInterval(secondPhaseInterval.current);
+    let currentVolume = -30;
+    const endVolumeLastPhase = -12;
+
+    const volumeIncreaseRateLastPhase = (endVolumeLastPhase - currentVolume) / 60;
+
+    lastPhaseInterval.current = setInterval(() => {
+      currentVolume += volumeIncreaseRateLastPhase;
+      if (currentVolume > endVolumeLastPhase) {
+        clearInterval(lastPhaseInterval.current);
+        currentVolume = endVolumeLastPhase;
+      }
+      setDroneVolume(currentVolume); // Update state
+      handleDroneVolume(currentVolume);
+    }, 1000);
+  };
   
   // DRONE LOOPS  
   const droneLoops = () => {
@@ -266,6 +289,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     stopAndDisposeDroneLoops();
     clearInterval(intervalId.current);
     clearInterval(secondPhaseInterval.current);
+    clearInterval(lastPhaseInterval.current);
     Tone.Transport.stop();
   
     // Reset state values to their initial settings
@@ -285,10 +309,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     setCountdownSettlingTime(selectSettlingTime * 60);
     // Apply the reset BPM to Tone.Transport
     Tone.Transport.bpm.setValueAtTime(initialBPM, Tone.now());
-  };
-  
-  // The useEffect hooks would then react to these state changes.
-  
+  };  
 
   let delayStart;
 
@@ -330,35 +351,30 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     }
   };
 
+  const handleMicToggle = async () => {
+    if (isMicOpen) {
+        closeMic();
+        setIsMicOpen(false);
+    } else {
+        await openMic();
+        setIsMicOpen(true);
+    }
+  };
+
+  const handleVolumeChange = (event) => {
+      const volume = event.target.value;
+      setMicVolumeState(volume);
+      setMicVolume(volume); // Call the imported function
+  };
+
   // useEffect Hooks
 
-   // Handle adjustments
-  //  useEffect(() => {
-  //   if (adjustmentsNeeded) {
-  //     const { BPM, filterLevelBreath, filterLevelDrum, wetLevel, droneVolume } = effectValuesRef.current;
-
-  //     setBPM(BPM);
-  //     setFilterLevelBreath(filterLevelBreath);
-  //     setFilterLevelDrum(filterLevelDrum);
-  //     setWetLevel(wetLevel);
-  //     setDroneVolume(droneVolume);
-
-  //     setAdjustmentsNeeded(false);
-  //   }
-  // }, [adjustmentsNeeded]);
-
-  // // Handle reset
-  // useEffect(() => {
-  //   if (resetTriggered) {
-  //     setBPM(30);
-  //     setFilterLevelBreath(200);
-  //     setFilterLevelDrum(80);
-  //     setWetLevel(0);
-  //     setDroneVolume(-35);
-
-  //     setResetTriggered(false);
-  //   }
-  // }, [resetTriggered]);
+  useEffect(() => {
+    // Start the Tone.js audio context
+    Tone.start().then(() => {
+        console.log("Audio context started");
+    }).catch(e => console.error(e));
+  }, []);
 
   // Countdown overall timer
   useEffect(() => {
@@ -457,6 +473,9 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       if (countdownSettlingTime === 1) {
         stopAndDisposeLoops();
       }
+      if (countdown === 60) {
+        volumeUpEnd();
+      }
       if (countdown === 10) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
@@ -465,6 +484,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
         playSample("endGong", 1);
         clearInterval(intervalId.current);
         clearInterval(secondPhaseInterval.current);
+        clearInterval(lastPhaseInterval.current);
         setDroneVolumeDownActive(false);
         setText('🙏');
         Tone.Transport.stop();
@@ -542,6 +562,10 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
             >
               {isActive ? 'Reset' : 'Start'}
             </button>
+            <div>
+              <button onClick={handleMicToggle}>{isMicOpen ? 'Close Microphone' : 'Open Microphone'}</button>
+              <input type="range" min="0" max="50" value={micVolume} onChange={handleVolumeChange} />
+            </div>
           </>
         )}
       </div>
