@@ -10,9 +10,6 @@ import {
   increaseFilterDrumFrequency,
   setReverbWetLevel,
   handleDroneVolume, 
-  openMic, 
-  closeMic,
-  setMicVolume 
 } from '../audio';
 import '../tailwind.css';
 
@@ -28,9 +25,6 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const [isActive, setIsActive] = useState(false);
   const [droneActive, setDroneActive] = useState(false);
   const [text, setText] = useState('Press Start');
-
-  const [micVolume, setMicVolumeState] = useState(0);
-  const [isMicOpen, setIsMicOpen] = useState(false);
 
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
@@ -351,31 +345,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     }
   };
 
-  const handleMicToggle = async () => {
-    if (isMicOpen) {
-        closeMic();
-        setIsMicOpen(false);
-    } else {
-        await openMic();
-        setIsMicOpen(true);
-    }
-  };
-
-  const handleVolumeChange = (event) => {
-      const volume = event.target.value;
-      setMicVolumeState(volume);
-      setMicVolume(volume); // Call the imported function
-  };
-
   // useEffect Hooks
-
-  useEffect(() => {
-    // Start the Tone.js audio context
-    Tone.start().then(() => {
-        console.log("Audio context started");
-    }).catch(e => console.error(e));
-  }, []);
-
   // Countdown overall timer
   useEffect(() => {
     setCountdown(selectedTime * 60);
@@ -476,7 +446,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       if (countdown === 60) {
         volumeUpEnd();
       }
-      if (countdown === 10) {
+      if (countdown === 4) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
       }
@@ -562,10 +532,6 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
             >
               {isActive ? 'Reset' : 'Start'}
             </button>
-            <div>
-              <button onClick={handleMicToggle}>{isMicOpen ? 'Close Microphone' : 'Open Microphone'}</button>
-              <input type="range" min="0" max="50" value={micVolume} onChange={handleVolumeChange} />
-            </div>
           </>
         )}
       </div>
