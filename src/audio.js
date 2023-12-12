@@ -9,6 +9,17 @@ let highpassBreath;
 let highpassDrum;
 let lowpassDrone, highpassDrone, droneReverb; 
 
+let mic = new Tone.UserMedia();
+let isMicOpen = false;
+
+// let pitchShift = new Tone.PitchShift(-6);
+let micReverb = new Tone.Reverb({ decay: 9 }).toDestination();
+micReverb.wet.value = 1;
+// let lowpassMic = new Tone.Filter(600, "lowpass");
+let highpassMic = new Tone.Filter(300, "highpass");
+let meter = new Tone.Meter();
+let compressor = new Tone.Compressor(-20, 4);
+
 export let droneVolumeControl = new Tone.Volume(-35);
 
 export const loadAudio = async (sampleName, url) => {
@@ -33,10 +44,6 @@ export const initializeAudio = async (sampleName) => {
         highpassDrone = new Tone.Filter(150, "highpass");
         droneReverb = new Tone.Reverb(6)
         droneReverb.wet.value = 0.6;
-        // droneFreeverb = new Tone.Freeverb({
-        //     roomSize: 0.8,
-        //     dampening: 500
-        // })
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass")
@@ -74,7 +81,6 @@ export const initializeAudio = async (sampleName) => {
                 case "ZT-drone-2":
                     players[sampleName].connect(lowpassDrone);
                     lowpassDrone.connect(highpassDrone);
-                    // highpassDrone.connect(droneFreeverb);
                     highpassDrone.connect(droneReverb);
                     droneReverb.connect(droneVolumeControl);
                     droneVolumeControl.toDestination();
@@ -94,14 +100,59 @@ export const initializeAudio = async (sampleName) => {
     }
 };
 
-export const handleDroneVolume = (value) => {
-    if (droneVolumeControl) {
-        droneVolumeControl.volume.value = value;
-        // console.log("db: ", value);
+// Function to get the current volume level
+export const getMicVolumeLevel = () => {
+    const db = meter.getValue();
+    console.log("Mic db: ", db)
+    return db;
+};
+
+export const openMic = async () => {
+    try {
+        await mic.open();
+        isMicOpen = true;
+        console.log("Microphone is open");
+
+        mic.connect(micReverb);
+        micReverb.connect(compressor);
+        compressor.connect(meter);
+        meter.toDestination();
+
+        const gain = meter.output.value;
+        console.log("Gain: ", gain);
+
+        await micReverb.generate();
+
+    } catch (error) {
+        console.error("Error opening microphone:", error);
+        isMicOpen = false;
     }
 };
 
+export const closeMic = () => {
+    if (isMicOpen) {
+        mic.disconnect(micReverb);
+        micReverb.disconnect(compressor);
+        compressor.disconnect(meter);
 
+        mic.close();
+        isMicOpen = false;
+        console.log("Microphone is closed");
+    }
+};
+
+export const setMicVolume = (volume) => {
+    if (mic) {
+        mic.volume.value = volume;
+    }
+};
+
+export const handleDroneVolume = (value) => {
+    if (droneVolumeControl) {
+        droneVolumeControl.volume.value = value;
+        console.log("Drone db: ", value);
+    }
+};
 
 // Utility function to increase the filter frequency
 export const increaseFilterBreathFrequency = (value) => {
@@ -151,4 +202,7 @@ export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
 export const setGlobalVolume = (volumeValue) => {
     Tone.Destination.volume.value = volumeValue;
 };
+
+export default { openMic, closeMic, setMicVolume, getMicVolumeLevel };
+
   

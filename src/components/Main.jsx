@@ -9,8 +9,7 @@ import {
   increaseFilterBreathFrequency,
   increaseFilterDrumFrequency,
   setReverbWetLevel,
-  handleDroneVolume
-  // stopAndDisposeSamples 
+  handleDroneVolume, 
 } from '../audio';
 import '../tailwind.css';
 
@@ -48,6 +47,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const droneLoopRef = useRef(null);
   const droneLoopRef60 = useRef(null);
 
+
   let intervalId = useRef(null); // ID of the interval to clear it later
   let secondPhaseInterval = useRef(null);
 
@@ -65,15 +65,15 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     const quarterTime = (durationInSeconds / 4) * 1000;
 
     // Filter
-    let currentFilterBreath = filterLevelBreath;
-    let currentFilterDrum = filterLevelDrum;
+    let currentFilterBreath = 200;
+    let currentFilterDrum = 80;
 
     // Update filter frequency based on the remaining time
     const filterIncreaseBreath = (5000 - currentFilterBreath) / durationInSeconds; // Going from 100hz to 5000hz
     const filterIncreaseDrum = (1000 - currentFilterDrum) / durationInSeconds; // Going from 100hz to 6000hz
 
     // FOR VOLUME CHANGE
-    let currentVolume = droneVolume;
+    let currentVolume = -30;
     const endVolumeFirstPhase = -9;
     const volumeIncreaseRateFirstPhase = (endVolumeFirstPhase - currentVolume) / durationInSeconds;
 
@@ -119,7 +119,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       }, quarterTime);
 
       //Reverb
-      let currentWetLevel = wetLevel;
+      let currentWetLevel = 0;
       // Calculate the increase per second based on the selected time
       const increasePerSecond = 1 / durationInSeconds
       
@@ -157,6 +157,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
     }, 1000);
   };
+  
 
   // Drone volume to 0db
   const volumeDown = () => {
@@ -176,6 +177,28 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       setDroneVolume(currentVolume);
       handleDroneVolume(currentVolume); // Apply volume change
       // console.log("volumeValue-final: ", currentVolume);
+    }, 1000);
+  };
+
+  // Volume up before end gong
+
+  let lastPhaseInterval = useRef(null);
+
+  const volumeUpEnd = () => {
+    clearInterval(secondPhaseInterval.current);
+    let currentVolume = -30;
+    const endVolumeLastPhase = -12;
+
+    const volumeIncreaseRateLastPhase = (endVolumeLastPhase - currentVolume) / 60;
+
+    lastPhaseInterval.current = setInterval(() => {
+      currentVolume += volumeIncreaseRateLastPhase;
+      if (currentVolume > endVolumeLastPhase) {
+        clearInterval(lastPhaseInterval.current);
+        currentVolume = endVolumeLastPhase;
+      }
+      setDroneVolume(currentVolume); // Update state
+      handleDroneVolume(currentVolume);
     }, 1000);
   };
   
@@ -254,6 +277,34 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     drumSampleIndex.current = 0;
   };
 
+  const resetTimer = () => {
+    // Stop all audio-related processes
+    stopAndDisposeLoops();
+    stopAndDisposeDroneLoops();
+    clearInterval(intervalId.current);
+    clearInterval(secondPhaseInterval.current);
+    clearInterval(lastPhaseInterval.current);
+    Tone.Transport.stop();
+  
+    // Reset state values to their initial settings
+    const initialBPM = 30;
+    const initialWetLevel = 0;
+    const initialFilterLevelBreath = 200;
+    const initialFilterLevelDrum = 80;
+  
+    setBPM(initialBPM);
+    setWetLevel(initialWetLevel);
+    setFilterLevelBreath(initialFilterLevelBreath);
+    setFilterLevelDrum(initialFilterLevelDrum);
+    setDroneVolumeDownActive(false);
+    setIsActive(false);
+    setIsActiveST(false);
+    setCountdown(selectedTime * 60);
+    setCountdownSettlingTime(selectSettlingTime * 60);
+    // Apply the reset BPM to Tone.Transport
+    Tone.Transport.bpm.setValueAtTime(initialBPM, Tone.now());
+  };  
+
   let delayStart;
 
   const toggleTimer = async () => {
@@ -265,8 +316,9 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
         return;
       }
     }
+    // Start
     if (!isActive) {
-      adjustEffects(); // start BPM/FX adjustment
+      adjustEffects();
       setIsActive(true); // Set the countdown active
       setIsActiveST(true);
       setDroneActive(true);
@@ -287,40 +339,10 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
-      if (isActiveST) {
-        setIsActiveST(false);
-      }
-      if (droneActive) {
-        cleanupDroneLoops();
-      }
-      if (droneVolumeDownActive) {
-        clearInterval(secondPhaseInterval.current);
-      }
-      setIsActive(false); // Set the countdown inactive
-      clearInterval(intervalId.current);
-      cleanupLoops();
-      Tone.Transport.stop();
-      noSleep.disable();
+      // Reset
+      setCountdown(0);
+      resetTimer();
     }
-  };
-
-  const resetTimer = () => {
-    const newBPM = 30;
-    setIsActive(false);
-    setIsActiveST(false);
-    setDroneVolumeDownActive(false);
-    setCountdown(selectedTime * 60);
-    setCountdownSettlingTime(selectSettlingTime * 60);
-    clearInterval(intervalId.current);
-    clearInterval(secondPhaseInterval.current);
-    stopAndDisposeLoops(); // stop the audio loops
-    stopAndDisposeDroneLoops();
-    Tone.Transport.stop();
-    setBPM(newBPM);
-    Tone.Transport.bpm.setValueAtTime(newBPM, Tone.now());
-    setFilterLevelDrum(80);
-    setFilterLevelBreath(200);
-    setWetLevel(0);
   };
 
   // useEffect Hooks
@@ -409,7 +431,6 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     }
   }, [isActive]);
 
-
   useEffect(() => { 
     const newBPM = 30;
     if (isActive) {
@@ -422,7 +443,10 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       if (countdownSettlingTime === 1) {
         stopAndDisposeLoops();
       }
-      if (countdown === 10) {
+      if (countdown === 60) {
+        volumeUpEnd();
+      }
+      if (countdown === 4) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
       }
@@ -430,6 +454,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
         playSample("endGong", 1);
         clearInterval(intervalId.current);
         clearInterval(secondPhaseInterval.current);
+        clearInterval(lastPhaseInterval.current);
         setDroneVolumeDownActive(false);
         setText('🙏');
         Tone.Transport.stop();
@@ -505,13 +530,7 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
               onClick={toggleTimer}
               className="mr-4 bg-sec hover:bg-ter text-ter hover:text-sec px-4 py-2 rounded"
             >
-              {isActive ? 'Pause' : 'Start'}
-            </button>
-            <button
-              onClick={resetTimer}
-              className="bg-ter hover:bg-sec text-sec hover:text-ter px-4 py-2 rounded"
-            >
-              Reset
+              {isActive ? 'Reset' : 'Start'}
             </button>
           </>
         )}

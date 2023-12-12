@@ -28,7 +28,7 @@ const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSe
                   </a>
                   <div className="dropdown-menu bg-dark">
                     <label htmlFor="settlingDown" className="form-label">🎧</label>
-                    <input type="range" className="form-range" min="1" max={selectedTime - 1} step="1" onChange={onSettlingTimeSelect} id="settlingDown" />
+                    <input type="range" className="form-range" min="1" max={selectedTime - 2} step="1" onChange={onSettlingTimeSelect} id="settlingDown" />
                   </div>                  
                 </li>
                 <li className="nav-item dropdown">
@@ -37,7 +37,32 @@ const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSe
                   </a>
                   <div className="dropdown-menu bg-dark">
                     <label htmlFor="meditationTime" className="form-label">🧘</label>
-                    <input type="range" className="form-range" min={selectSettlingTime} max="60" step="1" onChange={onTimeSelect} id="meditationTime" />
+                    <input type="range" className="form-range" min={selectSettlingTime + 2} max="60" step="1" onChange={onTimeSelect} id="meditationTime" />
+                  </div>
+                </li>
+                
+                {/* New Checkbox Section */}
+                <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Sounds
+                  </a>
+                  <div className="form-check">
+                    <input className="form-check-input" type="checkbox" value="" id="checkboxBreath"/>
+                    <label className="form-check-label text-sec" htmlFor="checkboxBreath">
+                      Breath
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input className="form-check-input" type="checkbox" value="" id="checkboxDrums"/>
+                    <label className="form-check-label text-sec" htmlFor="checkboxDrums">
+                      Bileteral Drums
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input className="form-check-input" type="checkbox" value="" id="checkboxDrone"/>
+                    <label className="form-check-label text-sec" htmlFor="checkboxDrone">
+                      Drone
+                    </label>
                   </div>
                 </li>
               </ul>
