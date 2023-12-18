@@ -42,17 +42,18 @@ export const initializeAudio = async (sampleName) => {
         // DRONE FX
         lowpassDrone = new Tone.Filter(500, "lowpass");
         highpassDrone = new Tone.Filter(150, "highpass");
-        droneReverb = new Tone.Reverb(6)
+        droneReverb = new Tone.Reverb(6);
         droneReverb.wet.value = 0.6;
 
         //highpassDrum
-        highpassDrum = new Tone.Filter(60, "highpass")
+        highpassDrum = new Tone.Filter(60, "highpass");
 
         // Create highpassBreath filter
-        highpassBreath = new Tone.Filter(200, "highpass") // Start at 200Hz
+        highpassBreath = new Tone.Filter(200, "highpass"); // Start at 200Hz
 
         // Create and configure reverb effect
-        reverb = new Tone.Reverb(9)
+        reverb = new Tone.Reverb(9);
+        reverb.wet.value = 0;
         await reverb.generate();
 
         if (!players[sampleName] && audioBuffers[sampleName]) {
@@ -150,7 +151,7 @@ export const setMicVolume = (volume) => {
 export const handleDroneVolume = (value) => {
     if (droneVolumeControl) {
         droneVolumeControl.volume.value = value;
-        console.log("Drone db: ", value);
+        // console.log("Drone db: ", value);
     }
 };
 
@@ -174,6 +175,7 @@ export const increaseFilterDrumFrequency = (value) => {
 // Utility function to set reverb wet level (0 is dry, 1 is fully wet)
 export const setReverbWetLevel = (value) => {
     if (reverb) {
+        console.log("reverb: ", value);
         reverb.wet.value = Math.min(Math.max(value, 0), 1);
     } else {
         console.error('Reverb not initialized');
