@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 import NoSleep from 'nosleep.js';
-
+// import {
+//   handleSettlingTime,
+//   handleTimeSelect,
+// } from '../App';
 import { 
   loadAudio, 
   initializeAudio, 
@@ -17,7 +20,7 @@ import cl from '../../cloudinaryConfig';
 
 const noSleep = new NoSleep();
 
-const Main = ({ selectedTime, selectSettlingTime }) => {
+const Main = ({selectedTime, selectSettlingTime}) => {
   // Initial State & Refs
   const [countdown, setCountdown] = useState(selectedTime * 60);
   const [countdownSettlingTime, setCountdownSettlingTime] = useState(selectSettlingTime * 60);
@@ -25,6 +28,8 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   const [isActive, setIsActive] = useState(false);
   const [droneActive, setDroneActive] = useState(false);
   const [text, setText] = useState('Press Start');
+
+  const [isResetting, setIsResetting] = useState(false);
 
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
@@ -57,29 +62,37 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     return currentBPM / 30; // Assuming 30 BPM is the original BPM for your samples
   };
 
-  let isResetting = false;
+  function calculateDurationInSeconds(value) {
+    const durationInSeconds = value * 60;
+    return durationInSeconds;
+}
+
+
+  // let isResetting = false;
   let timeoutIdForBreath = null;
   let timeoutIdForDrum = null;
 
   const adjustEffects = () => {
     // let elapsedTime = 0;
+    const duration = calculateDurationInSeconds(selectSettlingTime);
+    // console.log("duration: ", duration);
     // totalBPMChange = 20; // Change BPM from start 30 to 10
-    const durationInSeconds = selectSettlingTime * 60;
-    const decreaseRate = 10 / durationInSeconds; // How much to decrease the BPM each second
-    const quarterTime = (durationInSeconds / 4) * 1000;
+    // durationInSeconds = selectSettlingTime * 60;
+    const decreaseRate = 10 / duration; // How much to decrease the BPM each second
+    const quarterTime = (duration / 4) * 1000;
 
     // Filter
     // let currentFilterBreath = 200;
     // let currentFilterDrum = 80;
 
     // Update filter frequency based on the remaining time
-    const filterIncreaseBreath = (5000 - filterLevelBreath) / durationInSeconds; // Going from 100hz to 5000hz
-    const filterIncreaseDrum = (1000 - filterLevelDrum) / durationInSeconds; // Going from 100hz to 6000hz
+    const filterIncreaseBreath = (5000 - filterLevelBreath) / duration; // Going from 100hz to 5000hz
+    const filterIncreaseDrum = (1000 - filterLevelDrum) / duration; // Going from 100hz to 6000hz
 
     // FOR VOLUME CHANGE
     // let currentVolume = -30;
     const endVolumeFirstPhase = -9;
-    const volumeIncreaseRateFirstPhase = (endVolumeFirstPhase - droneVolume) / durationInSeconds;
+    const volumeIncreaseRateFirstPhase = (endVolumeFirstPhase - droneVolume) / duration;
 
     intervalId.current = setInterval(() => {
       if (isResetting) {
@@ -90,9 +103,10 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       const elapsedTime = Tone.Transport.seconds;
   
       // Update Volume
-      if (elapsedTime <= durationInSeconds) {
+      if (elapsedTime <= duration) {
         setDroneVolume(prevVolume => {
-          const newVolume = Math.min(prevVolume + volumeIncreaseRateFirstPhase, endVolumeFirstPhase);
+          let newVolume = droneVolume;
+          newVolume = Math.min(prevVolume + volumeIncreaseRateFirstPhase, endVolumeFirstPhase);
           handleDroneVolume(newVolume);
           return newVolume;
         });
@@ -103,7 +117,8 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
         // if (elapsedTime % quarterTime === 0) {
           // Update Breath Filter
         setFilterLevelBreath(prevFilterBreath => {
-          const newFilterBreath = Math.min(prevFilterBreath + filterIncreaseBreath, 8000);
+          let newFilterBreath = filterLevelBreath;
+          newFilterBreath = Math.min(prevFilterBreath + filterIncreaseBreath, 8000);
           increaseFilterBreathFrequency(newFilterBreath);
           return newFilterBreath;
         });
@@ -112,7 +127,8 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       // Update Drum Filter
       setTimeout(() => {
         setFilterLevelDrum(prevFilterDrum => {
-          const newFilterDrum = Math.min(prevFilterDrum + filterIncreaseDrum, 1000);
+          let newFilterDrum = filterLevelDrum;
+          newFilterDrum = Math.min(prevFilterDrum + filterIncreaseDrum, 1000);
           increaseFilterDrumFrequency(newFilterDrum);
           return newFilterDrum;
         });
@@ -122,22 +138,25 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
       // setWetLevel(prevWetLevel => {
       //   return Math.min(prevWetLevel + increasePerSecond, 1);
       // });
-      const increasePerSecond = 1 / durationInSeconds
+      const increasePerSecond = 1 / duration
       setWetLevel(prevWetLevel => {
-        const currentWetLevel = Math.min(prevWetLevel + increasePerSecond, 1);
+        let currentWetLevel = wetLevel;
+        currentWetLevel = Math.min(prevWetLevel + increasePerSecond, 1);
         setReverbWetLevel(currentWetLevel);
         return currentWetLevel;
       })
   
       // Update BPM
-      setBPM(prevBPM => Math.max(prevBPM - decreaseRate, 10));
-      setBPM(currentBPM => {
-        Tone.Transport.bpm.setValueAtTime(currentBPM, Tone.Transport.seconds);
-        return currentBPM;
+      setBPM(prevBPM => {
+        let newBPM = BPM;
+        newBPM = Math.max(prevBPM - decreaseRate, 10);
+        Tone.Transport.bpm.setValueAtTime(newBPM, Tone.Transport.seconds);
+        return newBPM;
       });
+      
   
       // Stop interval after duration
-      if (elapsedTime >= durationInSeconds) {
+      if (elapsedTime >= duration) {
         clearInterval(intervalId.current);
       }
     }, 1000);
@@ -260,13 +279,20 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   };
 
   const resetTimer = () => {
-    // Stop all audio-related processes
-    isResetting = true;
+    setIsResetting(true);
+    setAudioInitialized(false);
 
+    setIsActive(false);
+    setIsActiveST(false);
     setDroneActive(false);
     stopAndDisposeLoops();
     stopAndDisposeDroneLoops();
-    playSample("endGong");
+
+    calculateDurationInSeconds(selectSettlingTime);
+    setCountdown(selectedTime * 60);
+    setCountdownSettlingTime(selectSettlingTime * 60);
+
+    // playSample("endGong");
     clearInterval(intervalId.current);
     clearInterval(secondPhaseInterval.current);
     clearInterval(lastPhaseInterval.current);
@@ -274,24 +300,21 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
     clearTimeout(timeoutIdForDrum);
     setDroneVolumeDownActive(false);
     Tone.Transport.stop();
-  
-    // Reset state values to their initial settings
-    const initialBPM = 30;
-    const initialWetLevel = 0;
-    const initialFilterLevelBreath = 200;
-    const initialFilterLevelDrum = 80;
-  
-    setIsActive(false);
-    setIsActiveST(false);
-    setCountdown(selectedTime * 60);
-    setCountdownSettlingTime(selectSettlingTime * 60);
-    setBPM(initialBPM);
-    Tone.Transport.bpm.setValueAtTime(initialBPM, Tone.now());
-    setFilterLevelDrum(initialFilterLevelDrum);
-    setFilterLevelBreath(initialFilterLevelBreath);
-    setWetLevel(initialWetLevel);
-
-    isResetting = false;
+    
+    Promise.all([
+      initializeAudio("startGong"),
+      initializeAudio("endGong"),
+      initializeAudio("breath-1"),
+      initializeAudio("breath-2"),
+      initializeAudio("breath-3"),
+      initializeAudio("breath-4"),
+      initializeAudio("ZT-sha-L"),
+      initializeAudio("ZT-sha-R"),
+      initializeAudio("ZT-drone-1"),
+      initializeAudio("ZT-drone-2")
+    ])
+    .then(() => setAudioInitialized(true))
+    .catch(error => console.error("Failed to initialize audio:", error));
   };  
 
   let delayStart;
@@ -335,6 +358,24 @@ const Main = ({ selectedTime, selectSettlingTime }) => {
   };
 
   // useEffect Hooks
+  useEffect(() => {
+    if (isResetting) {
+      // Reset state values to their initial settings
+      const initialBPM = 30;
+      const initialWetLevel = 0;
+      const initialFilterLevelBreath = 200;
+      const initialFilterLevelDrum = 80;
+      
+      setBPM(initialBPM);
+      Tone.Transport.bpm.setValueAtTime(initialBPM, Tone.now());
+      setFilterLevelDrum(initialFilterLevelDrum);
+      setFilterLevelBreath(initialFilterLevelBreath);
+      setWetLevel(initialWetLevel);
+
+      setIsResetting(false);
+    }
+  }, [isResetting]);
+
   // Countdown overall timer
   useEffect(() => {
     setCountdown(selectedTime * 60);

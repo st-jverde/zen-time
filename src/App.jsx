@@ -8,24 +8,32 @@ import NavbarInfo from './components/NavbarInfo';
 // import Navbar from './components/Navbar';
 import Main from './components/Main';
 
+// export const handleTimeSelect = (setSelectedTime, event) => {
+//   setSelectedTime(Number(event.target.value));
+// };
+
+// export const handleSettlingTime = (setSelectSettlingTime, event) => {
+//   setSelectSettlingTime(Number(event.target.value));
+// };
+
 const App = () => {
   const [selectedTime, setSelectedTime] = useState(10);
   const [selectSettlingTime, setSelectSettlingTime] = useState(1)
-  const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
+  // const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
 
-  // Total meditation time
-  const handleTimeSelect = (event) => {
-    setSelectedTime(Number(event.target.value));
-  };
-
-  // Sounds to settle down time
-  const handleSettlingTime = (event) => {
-    setSelectSettlingTime(Number(event.target.value));
-  };
+    // Total meditation time
+    const handleTimeSelect = (event) => {
+      setSelectedTime(Number(event.target.value));
+    };
+  
+    // Sounds to settle down time
+    const handleSettlingTime = (event) => {
+      setSelectSettlingTime(Number(event.target.value));
+    };
 
   // Handler for when the global volume slider changes
   // const handleGlobalVolumeChange = (event) => {
-  //   const volumeValue = event.target.value;
+    // const volumeValue = event.target.value;
   //   setGlobalVolume(volumeValue);
   // };
 
@@ -36,7 +44,7 @@ const App = () => {
         selectedTime={selectedTime}
         onSettlingTimeSelect={handleSettlingTime}
         selectSettlingTime={selectSettlingTime} 
-        globalVolume={globalVolume} 
+        // globalVolume={globalVolume} 
       />
         {/* {handleGlobalVolumeChange={handleGlobalVolumeChange} />} */}
       <Main 
@@ -48,3 +56,20 @@ const App = () => {
 }
 
 export default App;
+
+// return (
+//   <div className="flex h-screen flex-col">
+//     <NavbarInfo 
+//       onTimeSelect={handleTimeSelect} 
+//       selectedTime={selectedTime}
+//       onSettlingTimeSelect={handleSettlingTime}
+//       selectSettlingTime={selectSettlingTime} 
+//       // globalVolume={globalVolume} 
+//     />
+//       {/* {handleGlobalVolumeChange={handleGlobalVolumeChange} />} */}
+//     <Main 
+//       selectedTime={selectedTime}
+//       selectSettlingTime={selectSettlingTime} 
+//     />
+//   </div>
+// );
