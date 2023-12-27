@@ -279,18 +279,10 @@ const Main = ({selectedTime, selectSettlingTime}) => {
   };
 
   const resetTimer = () => {
-    setIsResetting(true);
-    setAudioInitialized(false);
+    // setIsResetting(true);
 
-    setIsActive(false);
-    setIsActiveST(false);
-    setDroneActive(false);
     stopAndDisposeLoops();
     stopAndDisposeDroneLoops();
-
-    calculateDurationInSeconds(selectSettlingTime);
-    setCountdown(selectedTime * 60);
-    setCountdownSettlingTime(selectSettlingTime * 60);
 
     // playSample("endGong");
     clearInterval(intervalId.current);
@@ -298,23 +290,16 @@ const Main = ({selectedTime, selectSettlingTime}) => {
     clearInterval(lastPhaseInterval.current);
     clearTimeout(timeoutIdForBreath);
     clearTimeout(timeoutIdForDrum);
-    setDroneVolumeDownActive(false);
+
     Tone.Transport.stop();
-    
-    Promise.all([
-      initializeAudio("startGong"),
-      initializeAudio("endGong"),
-      initializeAudio("breath-1"),
-      initializeAudio("breath-2"),
-      initializeAudio("breath-3"),
-      initializeAudio("breath-4"),
-      initializeAudio("ZT-sha-L"),
-      initializeAudio("ZT-sha-R"),
-      initializeAudio("ZT-drone-1"),
-      initializeAudio("ZT-drone-2")
-    ])
-    .then(() => setAudioInitialized(true))
-    .catch(error => console.error("Failed to initialize audio:", error));
+    setDroneVolumeDownActive(false);
+    setIsActive(false);
+    setIsActiveST(false);
+    setDroneActive(false);
+
+    calculateDurationInSeconds(selectSettlingTime);
+    setCountdown(selectedTime * 60);
+    setCountdownSettlingTime(selectSettlingTime * 60);
   };  
 
   let delayStart;
@@ -352,29 +337,48 @@ const Main = ({selectedTime, selectSettlingTime}) => {
       return () => clearTimeout(delayStart);
     } else {
       // Reset
-      setCountdown(0);
+      // setIsResetting(true);
       resetTimer();
     }
   };
 
   // useEffect Hooks
-  useEffect(() => {
-    if (isResetting) {
-      // Reset state values to their initial settings
-      const initialBPM = 30;
-      const initialWetLevel = 0;
-      const initialFilterLevelBreath = 200;
-      const initialFilterLevelDrum = 80;
-      
-      setBPM(initialBPM);
-      Tone.Transport.bpm.setValueAtTime(initialBPM, Tone.now());
-      setFilterLevelDrum(initialFilterLevelDrum);
-      setFilterLevelBreath(initialFilterLevelBreath);
-      setWetLevel(initialWetLevel);
+  // useEffect(() => {
+  //   const initialBPM = 30;
+  //   const initialWetLevel = 0;
+  //   const initialFilterLevelBreath = 200;
+  //   const initialFilterLevelDrum = 80;
 
-      setIsResetting(false);
-    }
-  }, [isResetting]);
+  //   if (isResetting) { 
+  //     stopAndDisposeLoops();
+  //     stopAndDisposeDroneLoops();
+
+  //     // playSample("endGong");
+  //     clearInterval(intervalId.current);
+  //     clearInterval(secondPhaseInterval.current);
+  //     clearInterval(lastPhaseInterval.current);
+  //     clearTimeout(timeoutIdForBreath);
+  //     clearTimeout(timeoutIdForDrum);
+
+  //     Tone.Transport.stop();
+  //     setDroneVolumeDownActive(false);
+  //     setIsActive(false);
+  //     setIsActiveST(false);
+  //     setDroneActive(false);
+
+  //     calculateDurationInSeconds(selectSettlingTime);
+  //     setCountdown(selectedTime * 60);
+  //     setCountdownSettlingTime(selectSettlingTime * 60);
+      
+  //     setBPM(initialBPM);
+  //     Tone.Transport.bpm.setValueAtTime(initialBPM, Tone.now());
+  //     setFilterLevelDrum(initialFilterLevelDrum);
+  //     setFilterLevelBreath(initialFilterLevelBreath);
+  //     setWetLevel(initialWetLevel);
+
+  //     setIsResetting(false);
+  //   }
+  // }, [isResetting]);
 
   // Countdown overall timer
   useEffect(() => {
@@ -462,10 +466,16 @@ const Main = ({selectedTime, selectSettlingTime}) => {
   }, [isActive]);
 
   useEffect(() => { 
-    const newBPM = 30;
+    const initialBPM = 30;
+    const initialWetLevel = 0;
+    const initialFilterLevelBreath = 200;
+    const initialFilterLevelDrum = 80;
     if (isActive) {
       if (countdown === countdownSettlingTime) {
-        setBPM(newBPM);
+        setBPM(initialBPM);
+        setFilterLevelDrum(initialFilterLevelDrum);
+        setFilterLevelBreath(initialFilterLevelBreath);
+        setWetLevel(initialWetLevel);
         adjustEffects();
         Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
         playSample("startGong");

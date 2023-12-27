@@ -158,6 +158,7 @@ export const handleDroneVolume = (value) => {
 // Utility function to increase the filter frequency
 export const increaseFilterBreathFrequency = (value) => {
     if (highpassBreath) {
+        console.log("highpass Breath: ", value);
         highpassBreath.frequency.rampTo(value, 1); // 1 second ramp time, you can adjust
     }else {
         console.error('Highpass filter not initialized');
@@ -166,7 +167,9 @@ export const increaseFilterBreathFrequency = (value) => {
 
 export const increaseFilterDrumFrequency = (value) => {
     if (highpassDrum) {
+        console.log("highpass Drum: ", value);
         highpassDrum.frequency.rampTo(value, 1);
+
     }else {
         console.error('Highpass filter not initialized');
     }
