@@ -1,8 +1,8 @@
 import React from 'react';
-import VolumeSliders from './VolumeSliders';
-import { setGlobalVolume } from '../audio';
+// import VolumeSliders from './VolumeSliders';
+// import { setGlobalVolume } from '../audio';
 
-const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSettlingTime }) => {
+const Navbar = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSettlingTime }) => {
 
   // const handleVolumeChange = (volumeValue) => {
   //   console.log('Received in Navbar:', volumeValue);
@@ -43,7 +43,7 @@ const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSe
               </li>
               
               {/* New Checkbox Section */}
-              <li className="nav-item dropdown">
+              {/* <li className="nav-item dropdown">
               <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Sounds
                 </a>
@@ -65,7 +65,7 @@ const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSe
                     Drone
                   </label>
                 </div>
-              </li>
+              </li> */}
             </ul>
           </div>
           {/* <VolumeSliders onchanhe={handleVolumeChange(e)} /> */}
@@ -75,5 +75,5 @@ const NavbarInfo = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSe
   );
 }
 
-export default NavbarInfo;
+export default Navbar;
   

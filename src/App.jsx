@@ -4,17 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './tailwind.css';
 
-import NavbarInfo from './components/NavbarInfo';
-// import Navbar from './components/Navbar';
+import Navbar from './components/Navbar';
 import Main from './components/Main';
-
-// export const handleTimeSelect = (setSelectedTime, event) => {
-//   setSelectedTime(Number(event.target.value));
-// };
-
-// export const handleSettlingTime = (setSelectSettlingTime, event) => {
-//   setSelectSettlingTime(Number(event.target.value));
-// };
 
 const App = () => {
   const [selectedTime, setSelectedTime] = useState(10);
@@ -39,7 +30,7 @@ const App = () => {
 
   return (
     <div className="flex h-screen flex-col">
-      <NavbarInfo 
+      <Navbar 
         onTimeSelect={handleTimeSelect} 
         selectedTime={selectedTime}
         onSettlingTimeSelect={handleSettlingTime}
@@ -56,20 +47,3 @@ const App = () => {
 }
 
 export default App;
-
-// return (
-//   <div className="flex h-screen flex-col">
-//     <NavbarInfo 
-//       onTimeSelect={handleTimeSelect} 
-//       selectedTime={selectedTime}
-//       onSettlingTimeSelect={handleSettlingTime}
-//       selectSettlingTime={selectSettlingTime} 
-//       // globalVolume={globalVolume} 
-//     />
-//       {/* {handleGlobalVolumeChange={handleGlobalVolumeChange} />} */}
-//     <Main 
-//       selectedTime={selectedTime}
-//       selectSettlingTime={selectSettlingTime} 
-//     />
-//   </div>
-// );

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 // import VolumeSlider from './VolumeSlider';
 // import { setGlobalVolume } from '../audio';
 
-const Navbar = ({ onTimeSelect, selectedTime }) => {
+const NavbarOld = ({ onTimeSelect, selectedTime }) => {
 
   // const handleVolumeChange = (volumeValue) => {
   //   console.log('Received in Navbar:', volumeValue);
@@ -93,4 +93,4 @@ const Navbar = ({ onTimeSelect, selectedTime }) => {
 
 };
 
-export default Navbar;
+export default NavbarOld;
