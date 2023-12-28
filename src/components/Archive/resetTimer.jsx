@@ -1,20 +1,39 @@
 const resetTimer = () => {
-    const newBPM = 30;
+    // setIsResetting(true);
+
+    stopAndDisposeLoops();
+    stopAndDisposeDroneLoops();
+
+    // playSample("endGong");
+    clearInterval(secondPhaseInterval.current);
+    clearInterval(lastPhaseInterval.current);
+    clearTimeout(timeoutIdForBreath);
+    clearTimeout(timeoutIdForDrum);
+    clearInterval(intervalId.current);
+
     setIsActive(false);
-    setIsActiveST(false);
+    // setIsActiveST(false);
+    setDroneActive(false);
     setDroneVolumeDownActive(false);
+
+    calculateDurationInSeconds(selectSettlingTime);
     setCountdown(selectedTime * 60);
     setCountdownSettlingTime(selectSettlingTime * 60);
-    clearInterval(intervalId.current);
-    clearInterval(secondPhaseInterval.current);
-    stopAndDisposeLoops(); // stop the audio loops
-    stopAndDisposeDroneLoops();
+
+    // Reset audio effect states
+    setWetLevel(0); 
+    setFilterLevelBreath(200); 
+    setFilterLevelDrum(80); 
+    setDroneVolume(-30); 
+
+    // Apply the reset states to the audio system
+    setReverbWetLevel(0);
+    increaseFilterBreathFrequency(200);
+    increaseFilterDrumFrequency(80);
+    handleDroneVolume(-30);
+
     Tone.Transport.stop();
-    setBPM(newBPM);
-    Tone.Transport.bpm.setValueAtTime(newBPM, Tone.now());
-    setFilterLevelDrum(80);
-    setFilterLevelBreath(200);
-    setWetLevel(0);
+    stopAllSamples();
 
     return (
         <button
@@ -24,4 +43,23 @@ const resetTimer = () => {
             Reset
       </button>
     )
-};
+  };
+
+    //     const resetTimerOld = () => {
+    //     const newBPM = 30;
+    //     setIsActive(false);
+    //     setIsActiveST(false);
+    //     setDroneVolumeDownActive(false);
+    //     setCountdown(selectedTime * 60);
+    //     setCountdownSettlingTime(selectSettlingTime * 60);
+    //     clearInterval(intervalId.current);
+    //     clearInterval(secondPhaseInterval.current);
+    //     stopAndDisposeLoops(); // stop the audio loops
+    //     stopAndDisposeDroneLoops();
+    //     Tone.Transport.stop();
+    //     setBPM(newBPM);
+    //     Tone.Transport.bpm.setValueAtTime(newBPM, Tone.now());
+    //     setFilterLevelDrum(80);
+    //     setFilterLevelBreath(200);
+    //     setWetLevel(0);
+    // };
