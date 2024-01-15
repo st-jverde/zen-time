@@ -149,7 +149,7 @@ const Main = ({selectedTime, selectSettlingTime}) => {
   // Drone volume to 0db
   const volumeDown = () => {
     const remainingTime = (selectedTime * 60) - (selectSettlingTime * 60);
-    const endVolumeSecondPhase = -83;
+    const endVolumeSecondPhase = -75;
   
     const volumeDecreaseRateSecondPhase = (endVolumeSecondPhase - droneVolume) / remainingTime;
   
@@ -162,6 +162,7 @@ const Main = ({selectedTime, selectSettlingTime}) => {
   
       if (droneVolume <= endVolumeSecondPhase) {
         clearInterval(secondPhaseInterval.current);
+        setDroneVolume(-45);
       }
     }, 1000);
   };
@@ -169,7 +170,7 @@ const Main = ({selectedTime, selectSettlingTime}) => {
   // Volume up before end gong
   const volumeUpEnd = () => {
     clearInterval(secondPhaseInterval.current);
-    const endVolumeLastPhase = -12;
+    const endVolumeLastPhase = -6;
   
     const volumeIncreaseRateLastPhase = (endVolumeLastPhase - droneVolume) / 60;
   
@@ -396,6 +397,9 @@ const Main = ({selectedTime, selectSettlingTime}) => {
       if (countdown === 4) {
         setDroneActive(false);
         stopAndDisposeDroneLoops();
+      }
+      if (countdown === 2) {
+        clearInterval(lastPhaseInterval.current);
       }
       if (countdown === 0) {
         playSample("endGong", 1);
