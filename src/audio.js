@@ -20,7 +20,7 @@ micReverb.wet.value = 1;
 let meter = new Tone.Meter();
 let compressor = new Tone.Compressor(-20, 4);
 
-export let droneVolumeControl = new Tone.Volume(-35);
+export let droneVolumeControl = new Tone.Volume();
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -155,6 +155,16 @@ export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
         return null;
     }
 };
+
+// export const stopSample = (sampleName) => {
+//     if (players[sampleName]) {
+//         players[sampleName].stop();
+//         return players[sampleName];
+//     } else {
+//         console.error(`Sample ${sampleName} not loaded or player not initialized`);
+//         return null;
+//     }
+// };
 
 export const stopAllSamples = () => {
     Object.values(players).forEach(player => {

@@ -2,7 +2,21 @@ import React from 'react';
 // import VolumeSliders from './VolumeSliders';
 // import { setGlobalVolume } from '../audio';
 
-const Navbar = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSettlingTime }) => {
+import '../../public/styles/style.css';
+
+const Navbar = ({ 
+  onTimeSelect, 
+  selectedTime, 
+  onSettlingTimeSelect, 
+  selectSettlingTime,
+  isDroneOn, 
+  setIsDroneOn 
+}) => {
+
+  const handleDroneToggle = () => {
+    setIsDroneOn(!isDroneOn);
+    // Additional logic to play/stop drone can go here if needed
+  };
 
   // const handleVolumeChange = (volumeValue) => {
   //   console.log('Received in Navbar:', volumeValue);
@@ -41,6 +55,26 @@ const Navbar = ({ onTimeSelect, selectedTime, onSettlingTimeSelect, selectSettli
                   <input type="range" className="form-range" min={selectSettlingTime + 2} max="60" step="1" start={selectedTime} onChange={onTimeSelect} id="meditationTime" />
                 </div>
               </li>
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Drone Sound On / Off
+                </a>
+                <div className="dropdown-menu bg-dark">
+                    <div className="form-check form-switch text-white px-3 ml-8">
+                        <input 
+                            className="form-check-input" 
+                            type="checkbox"
+                            checked={isDroneOn}
+                            onChange={handleDroneToggle} 
+                            id="checkboxDrone"
+                        />
+                        <label className="form-check-label" htmlFor="checkboxDrone">
+                            {isDroneOn ? "Drone Sound On" : "Drone Sound Off"}
+                        </label>
+                    </div>
+                </div>
+              </li>
+
               
               {/* New Checkbox Section */}
               {/* <li className="nav-item dropdown">
