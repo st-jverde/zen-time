@@ -8,8 +8,9 @@ import Navbar from './components/Navbar';
 import Main from './components/Main';
 
 const App = () => {
-  const [selectedTime, setSelectedTime] = useState(12);
-  const [selectSettlingTime, setSelectSettlingTime] = useState(3)
+  const [selectedTime, setSelectedTime] = useState(6);
+  const [selectSettlingTime, setSelectSettlingTime] = useState(2)
+  const [isDroneOn, setIsDroneOn] = useState(true);
   // const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
 
     // Total meditation time
@@ -34,13 +35,16 @@ const App = () => {
         onTimeSelect={handleTimeSelect} 
         selectedTime={selectedTime}
         onSettlingTimeSelect={handleSettlingTime}
-        selectSettlingTime={selectSettlingTime} 
+        selectSettlingTime={selectSettlingTime}
+        isDroneOn={isDroneOn} 
+        setIsDroneOn={setIsDroneOn} 
         // globalVolume={globalVolume} 
       />
         {/* {handleGlobalVolumeChange={handleGlobalVolumeChange} />} */}
       <Main 
         selectedTime={selectedTime}
-        selectSettlingTime={selectSettlingTime} 
+        selectSettlingTime={selectSettlingTime}
+        isDroneOn={isDroneOn}
       />
     </div>
   );

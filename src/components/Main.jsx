@@ -5,19 +5,21 @@ import {
   loadAudio, 
   initializeAudio, 
   playSample,
+  stopSample, 
   increaseFilterBreathFrequency,
   increaseFilterDrumFrequency,
   setReverbWetLevel,
   handleDroneVolume,
-  stopAllSamples, 
 } from '../audio';
+import { droneOnOff } from './Navbar';
 import '../tailwind.css';
+import '../../public/styles/style.css';
 
 import cl from '../../cloudinaryConfig';
 
 const noSleep = new NoSleep();
 
-const Main = ({selectedTime, selectSettlingTime}) => {
+const Main = ({selectedTime, selectSettlingTime, isDroneOn }) => {
   // Initial State & Refs
   const [countdown, setCountdown] = useState(selectedTime * 60);
   const [countdownSettlingTime, setCountdownSettlingTime] = useState(selectSettlingTime * 60);
@@ -95,8 +97,13 @@ const Main = ({selectedTime, selectSettlingTime}) => {
         setDroneVolume(prevVolume => {
           let newVolume = droneVolume;
           newVolume = Math.min(prevVolume + volumeIncreaseRateFirstPhase, endVolumeFirstPhase);
-          handleDroneVolume(newVolume);
-          return newVolume;
+          if (isDroneOn) {
+            handleDroneVolume(newVolume);
+            return newVolume;
+          } else {
+            handleDroneVolume(-100);
+            return -100;
+          }
         });
       }
   
@@ -149,41 +156,54 @@ const Main = ({selectedTime, selectSettlingTime}) => {
   // Drone volume to 0db
   const volumeDown = () => {
     const remainingTime = (selectedTime * 60) - (selectSettlingTime * 60);
-    const endVolumeSecondPhase = -75;
+    const endVolumeSecondPhase = -80;
   
     const volumeDecreaseRateSecondPhase = (endVolumeSecondPhase - droneVolume) / remainingTime;
   
     secondPhaseInterval.current = setInterval(() => {
-      setDroneVolume(prevVolume => {
-        const newVolume = Math.max(prevVolume + volumeDecreaseRateSecondPhase, endVolumeSecondPhase);
-        handleDroneVolume(newVolume);
-        return newVolume;
-      });
-  
-      if (droneVolume <= endVolumeSecondPhase) {
-        clearInterval(secondPhaseInterval.current);
-        setDroneVolume(-45);
-      }
+        setDroneVolume(prevVolume => {
+          const newVolume = Math.max(prevVolume + volumeDecreaseRateSecondPhase, endVolumeSecondPhase);
+          if (isDroneOn) {
+            handleDroneVolume(newVolume);
+            return newVolume;
+          } else {
+            handleDroneVolume(-100);
+            return -100;
+          }
+
+        });
+    
+        if (droneVolume <= endVolumeSecondPhase) {
+          clearInterval(secondPhaseInterval.current);
+          setDroneVolume(-35);
+        }
     }, 1000);
   };
   
   // Volume up before end gong
   const volumeUpEnd = () => {
+    setDroneVolume(-35);
     clearInterval(secondPhaseInterval.current);
-    const endVolumeLastPhase = -6;
+    const endVolumeLastPhase = -12;
   
     const volumeIncreaseRateLastPhase = (endVolumeLastPhase - droneVolume) / 60;
   
     lastPhaseInterval.current = setInterval(() => {
-      setDroneVolume(prevVolume => {
-        const newVolume = Math.min(prevVolume + volumeIncreaseRateLastPhase, endVolumeLastPhase);
-        handleDroneVolume(newVolume);
-        return newVolume;
-      });
-  
-      if (droneVolume >= endVolumeLastPhase) {
-        clearInterval(lastPhaseInterval.current);
-      }
+
+        setDroneVolume(prevVolume => {
+          const newVolume = Math.min(prevVolume + volumeIncreaseRateLastPhase, endVolumeLastPhase);
+          if (isDroneOn) {
+            handleDroneVolume(newVolume);
+            return newVolume;
+          } else {
+            handleDroneVolume(-100);
+            return -100;
+          }
+        });
+    
+        if (droneVolume >= endVolumeLastPhase) {
+          clearInterval(lastPhaseInterval.current);
+        }
     }, 1000);
   };
   
@@ -291,6 +311,14 @@ const Main = ({selectedTime, selectSettlingTime}) => {
     }
   };
 
+  useEffect(() => {
+    if (isDroneOn) {
+      handleDroneVolume(droneVolume);
+    } else {
+      handleDroneVolume(-100);
+    }
+  }, [isDroneOn]);
+
   // Countdown overall timer
   useEffect(() => {
     setCountdown(selectedTime * 60);
@@ -349,11 +377,13 @@ const Main = ({selectedTime, selectSettlingTime}) => {
 
   useEffect(() => {
     if (!isActive) {
-      setText('Press "Start" to begin');
+      setText(
+        `Press Start to begin.\nSettling Down: ${Math.floor(countdownSettlingTime / 60)}:${countdownSettlingTime % 60 < 10 ? '0' : ''}${countdownSettlingTime % 60}`
+      );      
     } else {
       if (countdown && countdownSettlingTime > 0) {
         setText(
-          `Settling down: ${Math.floor(countdownSettlingTime / 60)}:${countdownSettlingTime % 60 < 10 ? '0' : ''}${countdownSettlingTime % 60}`
+          `Settling Down: ${Math.floor(countdownSettlingTime / 60)}:${countdownSettlingTime % 60 < 10 ? '0' : ''}${countdownSettlingTime % 60}`
         );
       } else if (countdown > 0 && countdownSettlingTime === 0) {
         setText('🧘');
@@ -410,22 +440,8 @@ const Main = ({selectedTime, selectSettlingTime}) => {
         Tone.Transport.stop();
         
         const autoReset = setTimeout(() => {
-          setIsActive(false);
-          setCountdown(selectedTime * 60);
-          setCountdownSettlingTime(selectSettlingTime * 60);
-          setBPM(initialBPM);
-          Tone.Transport.bpm.setValueAtTime(initialBPM, Tone.now());
-          setDroneVolume(-30);
-          setFilterLevelDrum(80);
-          setFilterLevelBreath(200);
-          setWetLevel(0);
-
-          handleDroneVolume(-30);
-          increaseFilterDrumFrequency(80);
-          increaseFilterBreathFrequency(200);
-          setReverbWetLevel(0);
-
           noSleep.disable();
+          window.location.reload();
         }, 10000);
   
         return () => clearTimeout(autoReset);
@@ -476,7 +492,7 @@ const Main = ({selectedTime, selectSettlingTime}) => {
         ) : (
           <>
             <div className="text-2xl mb-4 text-main">
-              <p>
+              <p className="multiline-text">
                 {text}
               </p>
             </div>
