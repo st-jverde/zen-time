@@ -8,8 +8,8 @@ import Navbar from './components/Navbar';
 import Main from './components/Main';
 
 const App = () => {
-  const [selectedTime, setSelectedTime] = useState(9);
-  const [selectSettlingTime, setSelectSettlingTime] = useState(3)
+  const [selectedTime, setSelectedTime] = useState(15);
+  const [selectSettlingTime, setSelectSettlingTime] = useState(2)
   const [isDroneOn, setIsDroneOn] = useState(true);
   // const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
 
