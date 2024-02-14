@@ -29,12 +29,13 @@ module.exports = {
       new Dotenv(),
       new HtmlWebpackPlugin({
         template: './index.html',
+        favicon: 'public/favicon.ico',
         minify: isDevelopment ? false : {
             removeAttributeQuotes: true,
             collapseWhitespace: true,
             removeComments: true
         }
-      }),  
+      }),
       isDevelopment && new ReactRefreshWebpackPlugin(),
     ].filter(Boolean),
     optimization: isDevelopment ? {} : {
