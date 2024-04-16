@@ -10,7 +10,7 @@ import Main from './components/Main';
 const App = () => {
   const [selectedTime, setSelectedTime] = useState(15);
   const [selectSettlingTime, setSelectSettlingTime] = useState(2)
-  const [isDroneOn, setIsDroneOn] = useState(true);
+  const [isDroneOn, setIsDroneOn] = useState(false);
   // const [globalVolume, setGlobalVolume] = useState(-12); // -12 dB as default
 
     // Total meditation time

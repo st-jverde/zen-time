@@ -7,7 +7,8 @@ const audioBuffers = {};
 let reverb;
 let highpassBreath;
 let highpassDrum;
-let lowpassDrone, highpassDrone, droneReverb; 
+let lowpassDrone, highpassDrone, droneReverb;
+let vol; 
 
 let mic = new Tone.UserMedia();
 let isMicOpen = false;
@@ -17,8 +18,8 @@ let micReverb = new Tone.Reverb({ decay: 9 }).toDestination();
 micReverb.wet.value = 1;
 // let lowpassMic = new Tone.Filter(600, "lowpass");
 // let highpassMic = new Tone.Filter(300, "highpass");
-let meter = new Tone.Meter();
-let compressor = new Tone.Compressor(-20, 4);
+// let meter = new Tone.Meter();
+// let compressor = new Tone.Compressor(-20, 4);
 
 export let droneVolumeControl = new Tone.Volume();
 
@@ -38,7 +39,8 @@ export const initializeAudio = async (sampleName) => {
         if (getContext().state === "suspended") {
             await getContext().resume();
         }
-        Tone.Destination.volume.value = -6;
+        // Tone.Destination.volume.value = -6;
+        vol = new Tone.Volume(-12);
         // DRONE FX
         lowpassDrone = new Tone.Filter(500, "lowpass");
         highpassDrone = new Tone.Filter(150, "highpass");
@@ -70,13 +72,15 @@ export const initializeAudio = async (sampleName) => {
                 case "breath-4":
                     players[sampleName].connect(highpassBreath);
                     highpassBreath.connect(reverb);
-                    reverb.toDestination();
+                    reverb.connect(vol);
+                    vol.toDestination();
                     break;
                 case "ZT-sha-L":
                 case "ZT-sha-R":
                     players[sampleName].connect(highpassDrum);
                     highpassDrum.connect(reverb);
-                    reverb.toDestination();
+                    reverb.connect(vol);
+                    vol.toDestination();
                     break;
                 case "ZT-drone-1":
                 case "ZT-drone-2":
@@ -84,11 +88,13 @@ export const initializeAudio = async (sampleName) => {
                     lowpassDrone.connect(highpassDrone);
                     highpassDrone.connect(droneReverb);
                     droneReverb.connect(droneVolumeControl);
-                    droneVolumeControl.toDestination();
+                    droneVolumeControl.connect(vol);
+                    vol.toDestination();
                     break;
                 default:
                     players[sampleName].connect(reverb);
-                    reverb.toDestination();
+                    reverb.connect(vol);
+                    vol.toDestination();
                     break;
             }
         } else if (!audioBuffers[sampleName]) {

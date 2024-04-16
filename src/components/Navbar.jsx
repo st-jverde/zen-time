@@ -57,7 +57,7 @@ const Navbar = ({
               </li>
               <li className="nav-item dropdown">
                 <a className="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Drone Sound On / Off
+                  {isDroneOn ? "Drone Sound On" : "Drone Sound Off"}
                 </a>
                 <div className="dropdown-menu bg-dark">
                     <div className="form-check form-switch text-white px-3 ml-8">
@@ -69,7 +69,7 @@ const Navbar = ({
                             id="checkboxDrone"
                         />
                         <label className="form-check-label" htmlFor="checkboxDrone">
-                            {isDroneOn ? "Drone Sound On" : "Drone Sound Off"}
+                          Drone Sound
                         </label>
                     </div>
                 </div>
