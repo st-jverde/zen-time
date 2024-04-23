@@ -25,8 +25,8 @@ export const initializeAudio = async (sampleName) => {
         if (getContext().state === "suspended") {
             await getContext().resume();
         }
-        // Tone.Destination.volume.value = -6;
-        vol = new Tone.Volume(-6);
+        Tone.Destination.volume.value = -12;
+        // vol = new Tone.Volume(-6);
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass");
@@ -53,20 +53,17 @@ export const initializeAudio = async (sampleName) => {
                 case "breath-4":
                     players[sampleName].connect(highpassBreath);
                     highpassBreath.connect(reverb);
-                    reverb.connect(vol);
-                    vol.toDestination();
+                    reverb.toDestination();
                     break;
                 case "ZT-sha-L":
                 case "ZT-sha-R":
                     players[sampleName].connect(highpassDrum);
                     highpassDrum.connect(reverb);
-                    reverb.connect(vol);
-                    vol.toDestination();
+                    reverb.toDestination();
                     break;
                 default:
                     players[sampleName].connect(reverb);
-                    reverb.connect(vol);
-                    vol.toDestination();
+                    reverb.toDestination();
                     break;
             }
         } else if (!audioBuffers[sampleName]) {
