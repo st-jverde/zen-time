@@ -1,4 +1,5 @@
 import React from 'react';
+import '../tailwind.css';
 // import VolumeSliders from './VolumeSliders';
 // import { setGlobalVolume } from '../audio';
 
@@ -77,6 +78,10 @@ const Navbar = ({
             </ul>
           </div>
           {/* <VolumeSliders onchanhe={handleVolumeChange(e)} /> */}
+          <div className="form-check text-sec mb-2">
+            Made by 
+            <a href="https://github.com/st-jverde" target="_blank" className="text-main"> st-jverde</a>
+          </div>
         </div>
       </div>
     </nav>
