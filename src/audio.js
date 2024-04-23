@@ -7,21 +7,7 @@ const audioBuffers = {};
 let reverb;
 let highpassBreath;
 let highpassDrum;
-let lowpassDrone, highpassDrone, droneReverb;
 let vol; 
-
-let mic = new Tone.UserMedia();
-let isMicOpen = false;
-
-// let pitchShift = new Tone.PitchShift(-6);
-let micReverb = new Tone.Reverb({ decay: 9 }).toDestination();
-micReverb.wet.value = 1;
-// let lowpassMic = new Tone.Filter(600, "lowpass");
-// let highpassMic = new Tone.Filter(300, "highpass");
-// let meter = new Tone.Meter();
-// let compressor = new Tone.Compressor(-20, 4);
-
-export let droneVolumeControl = new Tone.Volume();
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -40,12 +26,7 @@ export const initializeAudio = async (sampleName) => {
             await getContext().resume();
         }
         // Tone.Destination.volume.value = -6;
-        vol = new Tone.Volume(-12);
-        // DRONE FX
-        lowpassDrone = new Tone.Filter(500, "lowpass");
-        highpassDrone = new Tone.Filter(150, "highpass");
-        droneReverb = new Tone.Reverb(6);
-        droneReverb.wet.value = 0.6;
+        vol = new Tone.Volume(-6);
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass");
@@ -82,15 +63,6 @@ export const initializeAudio = async (sampleName) => {
                     reverb.connect(vol);
                     vol.toDestination();
                     break;
-                case "ZT-drone-1":
-                case "ZT-drone-2":
-                    players[sampleName].connect(lowpassDrone);
-                    lowpassDrone.connect(highpassDrone);
-                    highpassDrone.connect(droneReverb);
-                    droneReverb.connect(droneVolumeControl);
-                    droneVolumeControl.connect(vol);
-                    vol.toDestination();
-                    break;
                 default:
                     players[sampleName].connect(reverb);
                     reverb.connect(vol);
@@ -104,13 +76,6 @@ export const initializeAudio = async (sampleName) => {
     } catch (error) {
         console.error(`Error initializing audio for ${sampleName}:`, error);
         throw new Error(`Error initializing audio for ${sampleName}: ${error.message}`);
-    }
-};
-
-export const handleDroneVolume = (value) => {
-    if (droneVolumeControl) {
-        droneVolumeControl.volume.value = value;
-        console.log("Drone db: ", value);
     }
 };
 
@@ -162,76 +127,9 @@ export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
     }
 };
 
-// export const stopSample = (sampleName) => {
-//     if (players[sampleName]) {
-//         players[sampleName].stop();
-//         return players[sampleName];
-//     } else {
-//         console.error(`Sample ${sampleName} not loaded or player not initialized`);
-//         return null;
-//     }
-// };
-
-export const stopAllSamples = () => {
-    Object.values(players).forEach(player => {
-        if (player && player.state === "started") {
-            player.stop();
-        }
-    });
-};
-
 // Utility to set global volume
-export const setGlobalVolume = (volumeValue) => {
-    Tone.Destination.volume.value = volumeValue;
-};
-
-// Function to get the current volume level
-export const getMicVolumeLevel = () => {
-    const db = meter.getValue();
-    console.log("Mic db: ", db)
-    return db;
-};
-
-export const openMic = async () => {
-    try {
-        await mic.open();
-        isMicOpen = true;
-        console.log("Microphone is open");
-
-        mic.connect(micReverb);
-        micReverb.connect(compressor);
-        compressor.connect(meter);
-        meter.toDestination();
-
-        const gain = meter.output.value;
-        console.log("Gain: ", gain);
-
-        await micReverb.generate();
-
-    } catch (error) {
-        console.error("Error opening microphone:", error);
-        isMicOpen = false;
-    }
-};
-
-export const closeMic = () => {
-    if (isMicOpen) {
-        mic.disconnect(micReverb);
-        micReverb.disconnect(compressor);
-        compressor.disconnect(meter);
-
-        mic.close();
-        isMicOpen = false;
-        console.log("Microphone is closed");
-    }
-};
-
-export const setMicVolume = (volume) => {
-    if (mic) {
-        mic.volume.value = volume;
-    }
-};
-
-export default { openMic, closeMic, setMicVolume, getMicVolumeLevel };
+// export const setGlobalVolume = (volumeValue) => {
+//     Tone.Destination.volume.value = volumeValue;
+// };
 
   
