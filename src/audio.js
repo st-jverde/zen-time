@@ -2,12 +2,17 @@ import * as Tone from 'tone';
 
 const { Player, start, getContext, Buffer } = Tone;
 
+const customContext  = new Tone.Context({
+    latencyHint: "playback"
+});
+
+Tone.setContext(customContext );
+
 const players = {};
 const audioBuffers = {};
 let reverb;
 let highpassBreath;
 let highpassDrum;
-let vol; 
 
 export const loadAudio = async (sampleName, url) => {
     try {
@@ -26,7 +31,6 @@ export const initializeAudio = async (sampleName) => {
             await getContext().resume();
         }
         Tone.Destination.volume.value = -12;
-        // vol = new Tone.Volume(-6);
 
         //highpassDrum
         highpassDrum = new Tone.Filter(60, "highpass");
@@ -42,7 +46,6 @@ export const initializeAudio = async (sampleName) => {
         if (!players[sampleName] && audioBuffers[sampleName]) {
             players[sampleName] = new Player(audioBuffers[sampleName])
             players[sampleName].playbackRate = 1;
-
             // Ensure the sample is disconnected from any nodes it might be connected to
             players[sampleName].disconnect();
 
