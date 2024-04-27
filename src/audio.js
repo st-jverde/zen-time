@@ -25,7 +25,7 @@ export const initializeAudio = async (sampleName) => {
         if (getContext().state === "suspended") {
             await getContext().resume();
         }
-        Tone.Destination.volume.value = -12;
+        Tone.Destination.volume.value = -6;
         // vol = new Tone.Volume(-6);
 
         //highpassDrum
