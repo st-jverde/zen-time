@@ -56,7 +56,8 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   const adjustEffects = () => {
     const duration = calculateDurationInSeconds(selectSettlingTime);
     const decreaseRate = 10 / duration; // How much to decrease the BPM each second
-    const quarterTime = (duration / 4) * 1000;
+    const quarterTime = (duration / 4);
+    // * 1000; <- delay that can be added to quesrter time
 
     // Filter
     // Update filter frequency based on the remaining time
@@ -145,7 +146,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
     drumSampleIndex.current = 0;
   };
 
-  // let delayStart;
+  let delayStart;
 
   const toggleTimer = async () => {
     if (Tone && Tone.context && Tone.context.state !== 'running') {
@@ -158,19 +159,19 @@ const Main = ({selectedTime, selectSettlingTime }) => {
     }
     // Start
     if (!isActive) {
+      noSleep.enable();
       adjustEffects();
       setIsActive(true); // Set the countdown active
       setIsActiveST(true);
-      noSleep.enable();
+      if (countdownSettlingTime > 4) {
+        delayStart = setTimeout(() => {
+          initiateLoops()
+        }, 2000);
+      }
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
-      if (countdownSettlingTime > 4) {
-        initiateLoops()
-        // delayStart = setTimeout(() => {
-        // }, 2000);
-      }
       Tone.Transport.start();
-      // return () => clearTimeout(delayStart);
+      return () => clearTimeout(delayStart);
     } else {
       window.location.reload();
     }

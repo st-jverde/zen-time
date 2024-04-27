@@ -40,10 +40,10 @@ export const initializeAudio = async (sampleName) => {
 
         if (!players[sampleName] && audioBuffers[sampleName]) {
             players[sampleName] = new Player(audioBuffers[sampleName])
-            // players[sampleName].playbackRate = 1;
+            players[sampleName].playbackRate = 1;
 
             // Ensure the sample is disconnected from any nodes it might be connected to
-            // players[sampleName].disconnect();
+            players[sampleName].disconnect();
 
             switch (sampleName) {
                 case "breath-1":
@@ -111,7 +111,7 @@ export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
             console.warn("Tone context is not in 'running' state.");
             return;
         }
-        // players[sampleName].playbackRate = playbackRate;
+        players[sampleName].playbackRate = playbackRate;
         players[sampleName].start();
         if (onEndCallback) {
             players[sampleName].onended = onEndCallback;
