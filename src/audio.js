@@ -22,6 +22,7 @@ export const initializeAudio = async (sampleName) => {
         await start();
         
         if (getContext().state === "suspended") {
+            Tone.context.latencyHint = 'playback'; 
             await getContext().resume();
         }
         Tone.Destination.volume.value = -6;
