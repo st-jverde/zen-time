@@ -27,7 +27,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   const [audioReady, setAudioReady] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(29);
-  const [wetLevel, setWetLevel] = useState(0);
+  const [wetLevel, setWetLevel] = useState(0.3);
   const [filterLevelBreath, setFilterLevelBreath] = useState(400);
   const [filterLevelDrum, setFilterLevelDrum] = useState(250);
 

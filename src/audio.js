@@ -35,7 +35,7 @@ export const initializeAudio = async (sampleName) => {
         highpassBreath = new Tone.Filter(400, "highpass"); // Start at 200Hz
 
         // Create and configure reverb effect
-        reverb = new Tone.Reverb(9);
+        reverb = new Tone.Reverb(6);
         reverb.wet.value = 0;
         await reverb.generate();
 
