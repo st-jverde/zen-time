@@ -28,8 +28,8 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(28);
   const [wetLevel, setWetLevel] = useState(0);
-  const [filterLevelBreath, setFilterLevelBreath] = useState(250);
-  const [filterLevelDrum, setFilterLevelDrum] = useState(125);
+  const [filterLevelBreath, setFilterLevelBreath] = useState(300);
+  const [filterLevelDrum, setFilterLevelDrum] = useState(150);
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
   const drumSamples = ["ZT-sha-L", "ZT-sha-R"];

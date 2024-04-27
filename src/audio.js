@@ -29,10 +29,10 @@ export const initializeAudio = async (sampleName) => {
         // vol = new Tone.Volume(-6);
 
         //highpassDrum
-        highpassDrum = new Tone.Filter(125, "highpass");
+        highpassDrum = new Tone.Filter(150, "highpass");
 
         // Create highpassBreath filter
-        highpassBreath = new Tone.Filter(250, "highpass"); // Start at 200Hz
+        highpassBreath = new Tone.Filter(300, "highpass"); // Start at 200Hz
 
         // Create and configure reverb effect
         reverb = new Tone.Reverb(9);
