@@ -145,7 +145,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
     drumSampleIndex.current = 0;
   };
 
-  let delayStart;
+  // let delayStart;
 
   const toggleTimer = async () => {
     if (Tone && Tone.context && Tone.context.state !== 'running') {
@@ -165,12 +165,12 @@ const Main = ({selectedTime, selectSettlingTime }) => {
       Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
       playSample("startGong");
       if (countdownSettlingTime > 4) {
-        delayStart = setTimeout(() => {
-          initiateLoops()
-        }, 2000);
+        initiateLoops()
+        // delayStart = setTimeout(() => {
+        // }, 2000);
       }
       Tone.Transport.start();
-      return () => clearTimeout(delayStart);
+      // return () => clearTimeout(delayStart);
     } else {
       window.location.reload();
     }

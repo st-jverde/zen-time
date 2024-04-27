@@ -24,14 +24,14 @@ export const initializeAudio = async (sampleName) => {
         if (getContext().state === "suspended") {
             await getContext().resume();
         }
-        Tone.Destination.volume.value = -6;
+        Tone.Destination.volume.value = -1;
         // vol = new Tone.Volume(-6);
 
         //highpassDrum
-        highpassDrum = new Tone.Filter(60, "highpass");
+        highpassDrum = new Tone.Filter(125, "highpass");
 
         // Create highpassBreath filter
-        highpassBreath = new Tone.Filter(200, "highpass"); // Start at 200Hz
+        highpassBreath = new Tone.Filter(250, "highpass"); // Start at 200Hz
 
         // Create and configure reverb effect
         reverb = new Tone.Reverb(9);
