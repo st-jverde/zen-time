@@ -24,7 +24,7 @@ export const initializeAudio = async (sampleName) => {
         if (getContext().state === "suspended") {
             await getContext().resume();
         }
-        Tone.Destination.volume.value = -1;
+        Tone.Destination.volume.value = -6;
         // vol = new Tone.Volume(-6);
 
         //highpassDrum
@@ -39,7 +39,7 @@ export const initializeAudio = async (sampleName) => {
         await reverb.generate();
 
         if (!players[sampleName] && audioBuffers[sampleName]) {
-            players[sampleName] = new Player(audioBuffers[sampleName])
+            players[sampleName] = new Player(audioBuffers[sampleName]);
             players[sampleName].playbackRate = 1;
 
             // Ensure the sample is disconnected from any nodes it might be connected to
