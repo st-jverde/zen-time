@@ -40,8 +40,8 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   const drumLoopRef = useRef(null);
 
   let intervalId = useRef(null);
-  let timeoutIdForBreath = useRef(null);
-  let timeoutIdForDrum = useRef(null);
+  // let timeoutIdForBreath = useRef(null);
+  // let timeoutIdForDrum = useRef(null);
   
   // Utility & Helper Functions
   const getPlaybackRate = (currentBPM) => {
@@ -62,6 +62,8 @@ const Main = ({selectedTime, selectSettlingTime }) => {
     // Update filter frequency based on the remaining time
     const filterIncreaseBreath = (5000 - filterLevelBreath) / duration; // Going from 250hz to 5000hz
     const filterIncreaseDrum = (1000 - filterLevelDrum) / duration; // Going from 125hz to 6000hz
+
+    Tone.Transport.bpm.setValueAtTime(29);
 
     if (intervalId.current) {
       clearInterval(intervalId.current);
@@ -121,7 +123,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
       //   }, quarterTime);
       // }
 
-      const increasePerSecond = 1 / duration
+      const increasePerSecond = 0.7 / duration
       setWetLevel(prevWetLevel => {
         let currentWetLevel = wetLevel;
         currentWetLevel = Math.min(prevWetLevel + increasePerSecond, 1);
@@ -189,11 +191,8 @@ const Main = ({selectedTime, selectSettlingTime }) => {
     setCountdownSettlingTime(selectSettlingTime * 60);
     setText('🙏');
     Tone.Transport.stop();
-    noSleep.disable();
     setFilterLevelBreath(250);
-    // increaseFilterBreathFrequency(250);
     setFilterLevelDrum(125);
-    // increaseFilterDrumFrequency(125);
     setBPM(29);
     setWetLevel(0.3);
     // window.location.reload();
@@ -226,6 +225,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
       Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
+      noSleep.disable();
       setIsActive(false);
       setIsActiveST(false);
       // reset();
@@ -233,7 +233,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   };
 
   useEffect(() => {
-    if (!isActive && !isActiveST) {
+    if (!isActiveST || !isActive) {
       console.log("reset activated");
       reset();
     }
@@ -290,8 +290,6 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   useEffect(() => {
     return () => {
       clearInterval(intervalId.current);
-      // clearInterval(timeoutIdForBreath.current);
-      // clearInterval(timeoutIdForDrum.current);
     };
   }, []);
 
@@ -330,6 +328,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
         playSample("startGong");
       }
       if (countdown === 0) {
+        noSleep.disable();
         playSample("endGong", 1);
         clearInterval(intervalId.current);
         setText('🙏');

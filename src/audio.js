@@ -106,6 +106,10 @@ export const setReverbWetLevel = (value) => {
     }
 };
 
+// export const bpmControl = (value) => {
+
+// }
+
 export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
     if (players[sampleName]) {
         if (Tone.getContext().state !== "running") {
