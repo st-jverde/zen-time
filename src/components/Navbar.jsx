@@ -12,6 +12,10 @@ const Navbar = ({
   selectSettlingTime,
 }) => {
 
+  // const settlingTimeOnLoad = () => {
+
+  // }
+
   // const handleVolumeChange = (volumeValue) => {
   //   console.log('Received in Navbar:', volumeValue);
   //   setGlobalVolume(volumeValue); 
@@ -37,7 +41,7 @@ const Navbar = ({
                 </a>
                 <div className="dropdown-menu bg-dark">
                   <label htmlFor="settlingDown" className="form-label">🎧</label>
-                  <input type="range" className="form-range" min="1" max={selectedTime - 2} step="1" start={selectSettlingTime} onChange={onSettlingTimeSelect} id="settlingDown" />
+                  <input type="range" className="form-range" min="1" max={selectedTime - 2} step="1" value={selectSettlingTime} onChange={onSettlingTimeSelect} id="settlingDown" />
                 </div>                  
               </li>
               <li className="nav-item dropdown">
@@ -46,7 +50,7 @@ const Navbar = ({
                 </a>
                 <div className="dropdown-menu bg-dark">
                   <label htmlFor="meditationTime" className="form-label">🧘</label>
-                  <input type="range" className="form-range" min={selectSettlingTime + 2} max="60" step="1" start={selectedTime} onChange={onTimeSelect} id="meditationTime" />
+                  <input type="range" className="form-range" min={selectSettlingTime + 2} max="60" step="1" value={selectedTime} onChange={onTimeSelect} id="meditationTime" />
                 </div>
               </li>
 
