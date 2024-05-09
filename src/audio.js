@@ -27,6 +27,7 @@ export const initializeAudio = async (sampleName) => {
         }
         Tone.Destination.volume.value = -3;
         // vol = new Tone.Volume(-6);
+        Tone.Transport.bpm.value = 29;
 
         //highpassDrum
         highpassDrum = new Tone.Filter(125, "highpass");
@@ -106,9 +107,10 @@ export const setReverbWetLevel = (value) => {
     }
 };
 
-// export const bpmControl = (value) => {
-
-// }
+export const setNewBPM = (value) => {
+    console.log("BPM: ", value);
+    Tone.Transport.bpm.rampTo(value, 1);
+}
 
 export const playSample = (sampleName, playbackRate = 1.0, onEndCallback) => {
     if (players[sampleName]) {

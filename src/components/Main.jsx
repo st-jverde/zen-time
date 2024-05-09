@@ -8,6 +8,7 @@ import {
   increaseFilterBreathFrequency,
   increaseFilterDrumFrequency,
   setReverbWetLevel,
+  setNewBPM,
 } from '../audio';
 import '../tailwind.css';
 import '../../public/styles/style.css';
@@ -62,8 +63,6 @@ const Main = ({selectedTime, selectSettlingTime }) => {
     // Update filter frequency based on the remaining time
     const filterIncreaseBreath = (5000 - filterLevelBreath) / duration; // Going from 250hz to 5000hz
     const filterIncreaseDrum = (1000 - filterLevelDrum) / duration; // Going from 125hz to 6000hz
-
-    Tone.Transport.bpm.setValueAtTime(29);
 
     if (intervalId.current) {
       clearInterval(intervalId.current);
@@ -135,8 +134,9 @@ const Main = ({selectedTime, selectSettlingTime }) => {
       setBPM(prevBPM => {
         let newBPM = BPM;
         newBPM = Math.max(prevBPM - decreaseRate, 10);
-        Tone.Transport.bpm.setValueAtTime(newBPM, Tone.Transport.seconds);
-        console.log("BPM: ", newBPM);
+        setNewBPM(newBPM);
+        // Tone.Transport.bpm.setValueAtTime(newBPM, Tone.Transport.seconds);
+        // console.log("BPM: ", newBPM);
         return newBPM;
       });
       
