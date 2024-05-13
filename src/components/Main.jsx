@@ -29,7 +29,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [BPM, setBPM] = useState(29);
   const [wetLevel, setWetLevel] = useState(0.3);
-  const [filterLevelBreath, setFilterLevelBreath] = useState(250);
+  const [filterLevelBreath, setFilterLevelBreath] = useState(200);
   const [filterLevelDrum, setFilterLevelDrum] = useState(125);
 
   const breathSamples = ["breath-1", "breath-2", "breath-3", "breath-4"];
@@ -52,16 +52,16 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   function calculateDurationInSeconds(value) {
     const durationInSeconds = value * 60;
     return durationInSeconds;
-}
+  }
 
   const adjustEffects = () => {
     const duration = calculateDurationInSeconds(selectSettlingTime);
     const decreaseRate = 10 / duration; // How much to decrease the BPM each second
-    const quarterTime = (duration / 4) * 1000;
+    // const quarterTime = (duration / 4) * 1000;
 
     // Filter
     // Update filter frequency based on the remaining time
-    const filterIncreaseBreath = (5000 - filterLevelBreath) / duration; // Going from 250hz to 5000hz
+    const filterIncreaseBreath = (5000 - filterLevelBreath) / duration; // Going from 250hz to 4500hz
     const filterIncreaseDrum = (1000 - filterLevelDrum) / duration; // Going from 125hz to 6000hz
 
     if (intervalId.current) {
@@ -73,7 +73,7 @@ const Main = ({selectedTime, selectSettlingTime }) => {
 
       setFilterLevelBreath(prevFilterBreath => {
         let newFilterBreath = filterLevelBreath;
-        newFilterBreath = Math.min(prevFilterBreath + filterIncreaseBreath, 8000);
+        newFilterBreath = Math.min(prevFilterBreath + filterIncreaseBreath, 5000);
         increaseFilterBreathFrequency(newFilterBreath);
         return newFilterBreath;
       });
@@ -84,43 +84,6 @@ const Main = ({selectedTime, selectSettlingTime }) => {
         increaseFilterDrumFrequency(newFilterDrum);
         return newFilterDrum;
       });
-
-      // console.log(`Elapsed Time: ${elapsedTime}, Duration: ${duration}`);
-
-      // // Stop the interval if the duration has passed
-      // if (elapsedTime >= duration) {
-      //     clearInterval(intervalId.current);
-      //     intervalId.current = null; // Reset the interval ID ref
-      //     console.log('Interval stopped due to elapsed time reaching duration.');
-      //     return; // Exit the function to avoid further processing
-      // }
-
-      // // Update Filters and Reverb based on quarterTime
-      // if (!timeoutIdForBreath.current) {
-      //   timeoutIdForBreath.current = setTimeout(() => {
-      //       // Update Breath Filter
-      //     setFilterLevelBreath(prevFilterBreath => {
-      //       let newFilterBreath = filterLevelBreath;
-      //       newFilterBreath = Math.min(prevFilterBreath + filterIncreaseBreath, 8000);
-      //       increaseFilterBreathFrequency(newFilterBreath);
-      //       return newFilterBreath;
-      //     });
-      //     timeoutIdForBreath.current = null;
-      //   }, quarterTime);
-      // }  
-  
-      // // Update Drum Filter
-      // if (!timeoutIdForDrum.current) {
-      //   timeoutIdForDrum.current = setTimeout(() => {
-      //     setFilterLevelDrum(prevFilterDrum => {
-      //       let newFilterDrum = filterLevelDrum;
-      //       newFilterDrum = Math.min(prevFilterDrum + filterIncreaseDrum, 1000);
-      //       increaseFilterDrumFrequency(newFilterDrum);
-      //       return newFilterDrum;
-      //     });
-      //     timeoutIdForDrum.current = null;
-      //   }, quarterTime);
-      // }
 
       const increasePerSecond = 0.7 / duration
       setWetLevel(prevWetLevel => {
@@ -135,8 +98,6 @@ const Main = ({selectedTime, selectSettlingTime }) => {
         let newBPM = BPM;
         newBPM = Math.max(prevBPM - decreaseRate, 10);
         setNewBPM(newBPM);
-        // Tone.Transport.bpm.setValueAtTime(newBPM, Tone.Transport.seconds);
-        // console.log("BPM: ", newBPM);
         return newBPM;
       });
       
@@ -187,10 +148,9 @@ const Main = ({selectedTime, selectSettlingTime }) => {
   const reset = () => {
     clearInterval(intervalId.current);
     stopAndDisposeLoops();
+    Tone.Transport.stop();
     setCountdown(selectedTime * 60);
     setCountdownSettlingTime(selectSettlingTime * 60);
-    setText('🙏');
-    Tone.Transport.stop();
     setFilterLevelBreath(250);
     setFilterLevelDrum(125);
     setBPM(29);
@@ -215,29 +175,21 @@ const Main = ({selectedTime, selectSettlingTime }) => {
       adjustEffects();
       setIsActive(true);
       setIsActiveST(true);
+      Tone.Transport.start();
+      playSample("startGong");
       if (countdownSettlingTime > 4) {
         delayStart = setTimeout(() => {
           initiateLoops()
         }, 2000);
       }
-      Tone.Transport.bpm.setValueAtTime(BPM, 0); // Setting BPM
-      playSample("startGong");
-      Tone.Transport.start();
       return () => clearTimeout(delayStart);
     } else {
       noSleep.disable();
       setIsActive(false);
       setIsActiveST(false);
-      // reset();
-    }
-  };
-
-  useEffect(() => {
-    if (!isActiveST || !isActive) {
-      console.log("reset activated");
       reset();
     }
-  },[isActive, isActiveST]);
+  };
 
   // Countdown overall timer
   useEffect(() => {
@@ -285,8 +237,6 @@ const Main = ({selectedTime, selectSettlingTime }) => {
     return () => clearTimeout(settlingTimer);
   }, [countdownSettlingTime, isActive]);
 
-
-  // Clears the interval (identified by intervalId.current) to prevent memory leaks upon component unmount.
   useEffect(() => {
     return () => {
       clearInterval(intervalId.current);
@@ -305,21 +255,25 @@ const Main = ({selectedTime, selectSettlingTime }) => {
         );
       } else if (countdown > 0 && countdownSettlingTime === 0) {
         setText('🧘');
-      } 
+      } else if (countdown === 0) {
+        setText('🙏');
+      }
     }
   }, [countdown, countdownSettlingTime, isActive])
 
   useEffect(() => {
-    if (countdownSettlingTime === 0) {
+    if (countdownSettlingTime === 4) {
       stopAndDisposeLoops();
+      clearInterval(intervalId.current);
+    }
+    if (countdownSettlingTime === 0) {
       setIsActiveST(false);
       playSample("startGong");
-      clearInterval(intervalId.current);
     }
   }, [countdownSettlingTime]);
 
   useEffect(() => { 
-    const initialBPM = 30;
+    const initialBPM = 29;
     if (isActive) {
       if (countdown === countdownSettlingTime) {
         setBPM(initialBPM);
@@ -331,12 +285,11 @@ const Main = ({selectedTime, selectSettlingTime }) => {
         noSleep.disable();
         playSample("endGong", 1);
         clearInterval(intervalId.current);
-        setText('🙏');
-        Tone.Transport.stop();
         
         const autoReset = setTimeout(() => {
           setIsActive(false);
           setIsActiveST(false);
+          reset();
           // window.location.reload();
         }, 10000);
   
