@@ -90,6 +90,9 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+# wasm-pack output (run npm run build:wasm)
+src/audio/wasm/zen_drone/pkg/
+src/audio/wasm/zen_samples/pkg/
 # samples
 
 # Gatsby files

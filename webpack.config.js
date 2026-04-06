@@ -7,6 +7,8 @@ const Dotenv = require('dotenv-webpack');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
+const droneWorkletPath = path.resolve(__dirname, 'src/audio/droneWorkletProcessor.js');
+
 module.exports = {
     mode: isDevelopment ? 'development' : 'production',
     entry: './src/index.jsx',
@@ -19,13 +21,23 @@ module.exports = {
     devServer: {
       static: path.join(__dirname, 'dist'),
       compress: true,
-      port: 9000,
+      // Prefer 9000; if busy, webpack-dev-server picks the next free port (see WEBPACK_DEV_SERVER_BASE_PORT in npm start).
+      port: process.env.PORT ? Number(process.env.PORT) : 'auto',
       historyApiFallback: true,
     },
     plugins: [
       // Cleanup dist folder
       new CleanWebpackPlugin(),
-      isDevelopment ? new webpack.EnvironmentPlugin(['NODE_ENV']) : new webpack.EnvironmentPlugin(['NODE_ENV', 'REACT_APP_CLOUDINARY_CLOUD_NAME']),
+      isDevelopment
+        ? new webpack.EnvironmentPlugin({
+            NODE_ENV: 'development',
+            EXPERIMENTAL_WASM_SAMPLES: process.env.EXPERIMENTAL_WASM_SAMPLES ?? 'false',
+          })
+        : new webpack.EnvironmentPlugin({
+            NODE_ENV: 'production',
+            REACT_APP_CLOUDINARY_CLOUD_NAME: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || '',
+            EXPERIMENTAL_WASM_SAMPLES: process.env.EXPERIMENTAL_WASM_SAMPLES ?? 'false',
+          }),
       new Dotenv(),
       new HtmlWebpackPlugin({
         template: './index.html',
@@ -46,18 +58,21 @@ module.exports = {
       rules: [
         {
             test: /\.(js|jsx)$/,
-            exclude: /node_modules/,
+            exclude: [/node_modules/, droneWorkletPath],
             use: [
                 {
                     loader: 'babel-loader',
                     options: {
-                        // This is required for react-refresh to function:
+                        presets: [
+                            '@babel/preset-env',
+                            '@babel/preset-react',
+                        ],
                         plugins: [
-                            process.env.NODE_ENV === isDevelopment && new ReactRefreshWebpackPlugin(),
-                        ].filter(Boolean)
-                    }
-                }
-            ]
+                            isDevelopment && require.resolve('react-refresh/babel'),
+                        ].filter(Boolean),
+                    },
+                },
+            ],
         },
         {
             test: /\.css$/,
@@ -88,6 +103,14 @@ module.exports = {
               }
             }
           ]
+        },
+        // zen_samples uses wasm-pack `web` target: `new URL('*.wasm', import.meta.url)` + fetch (not webpack wasm parser).
+        {
+          test: /\.wasm$/,
+          type: 'asset/resource',
+          generator: {
+            filename: 'wasm/[name].[hash][ext]',
+          },
         },
       ]    
     },

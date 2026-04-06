@@ -2,10 +2,14 @@ export {
   loadAudio,
   initializeAllAudio,
   handleDroneVolume,
+  setDronePathProcedural,
+  setProceduralDroneActive,
   increaseFilterBreathFrequency,
   increaseFilterDrumFrequency,
   setReverbWetLevel,
   resetEffectsToDefaults,
+  scheduleSettlingAudioRamps,
+  cancelSettlingAudioRamps,
   playSample,
   stopAllSamples,
   setGlobalVolume,
@@ -14,8 +18,8 @@ export {
   setMicVolume,
   getMicVolumeLevel,
   droneVolumeControl,
+  setWasmSamplesProcessing,
 } from './api';
 
 export { ensurePlaybackContext } from './context';
-
-export { default } from './api';
+export { EXPERIMENTAL_WASM_SAMPLES, loadZenSamplesWasm, processToneBufferWithWasm } from './experimentalWasmSamples';

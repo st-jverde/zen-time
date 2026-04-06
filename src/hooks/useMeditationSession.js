@@ -5,9 +5,9 @@ import {
   playSample,
   stopAllSamples,
   handleDroneVolume,
-  increaseFilterBreathFrequency,
-  increaseFilterDrumFrequency,
-  setReverbWetLevel,
+  setProceduralDroneActive,
+  scheduleSettlingAudioRamps,
+  cancelSettlingAudioRamps,
   resetEffectsToDefaults,
 } from '../audio';
 
@@ -21,11 +21,26 @@ function getPlaybackRate(currentBPM) {
   return currentBPM / 30;
 }
 
-export function useMeditationSession({ selectedTime, selectSettlingTime, isDroneOn }) {
+function formatMmSs(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function idleStatusText(selectedTime, selectSettlingTime) {
+  return `Ease in: ${formatMmSs(selectSettlingTime * 60)}\nMeditation: ${formatMmSs(selectedTime * 60)}`;
+}
+
+export function useMeditationSession({
+  selectedTime,
+  selectSettlingTime,
+  isDroneOn,
+  useSyntheticDrone = false,
+}) {
   const [countdown, setCountdown] = useState(() => selectedTime * 60);
   const [countdownSettlingTime, setCountdownSettlingTime] = useState(() => selectSettlingTime * 60);
   const [isActive, setIsActive] = useState(false);
-  const [text, setText] = useState('Press Start');
+  const [text, setText] = useState(() => idleStatusText(selectedTime, selectSettlingTime));
 
   const [droneVolumeDownActive, setDroneVolumeDownActive] = useState(false);
 
@@ -36,7 +51,6 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
   const droneLoopRef = useRef(null);
   const droneLoopRef60 = useRef(null);
 
-  const settlingRepeatIdRef = useRef(null);
   const secondPhaseIntervalRef = useRef(null);
   const lastPhaseIntervalRef = useRef(null);
   const breathDelayTimeoutRef = useRef(null);
@@ -56,13 +70,6 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
   useEffect(() => {
     isDroneOnRef.current = isDroneOn;
   }, [isDroneOn]);
-
-  const clearSettlingRepeat = useCallback(() => {
-    if (settlingRepeatIdRef.current != null) {
-      Tone.Transport.clear(settlingRepeatIdRef.current);
-      settlingRepeatIdRef.current = null;
-    }
-  }, []);
 
   const cleanupDroneLoops = useCallback(() => {
     droneLoopRef.current?.stop(0);
@@ -98,25 +105,25 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
   }, []);
 
   const droneLoops = useCallback(() => {
-    droneLoopRef.current = new Tone.Loop(() => {
-      playSample(droneSamples[0], 0.67);
+    droneLoopRef.current = new Tone.Loop((time) => {
+      playSample(droneSamples[0], 0.67, undefined, time);
     }, '1n').start('+1');
 
-    droneLoopRef60.current = new Tone.Loop(() => {
-      playSample(droneSamples[1], 0.67);
+    droneLoopRef60.current = new Tone.Loop((time) => {
+      playSample(droneSamples[1], 0.67, undefined, time);
     }, '4n').start();
   }, []);
 
   const initiateLoops = useCallback(() => {
-    breathLoopRef.current = new Tone.Loop(() => {
+    breathLoopRef.current = new Tone.Loop((time) => {
       const rate = getPlaybackRate(30);
-      playSample(breathSamples[breathSampleIndex.current], rate);
+      playSample(breathSamples[breathSampleIndex.current], rate, undefined, time);
       breathSampleIndex.current = (breathSampleIndex.current + 1) % breathSamples.length;
     }, '2n').start();
 
-    drumLoopRef.current = new Tone.Loop(() => {
+    drumLoopRef.current = new Tone.Loop((time) => {
       const rate = getPlaybackRate(30);
-      playSample(drumSamples[drumSampleIndex.current], rate);
+      playSample(drumSamples[drumSampleIndex.current], rate, undefined, time);
       drumSampleIndex.current = (drumSampleIndex.current + 1) % drumSamples.length;
     }, '8n').start();
   }, []);
@@ -128,53 +135,6 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
       handleDroneVolume(-100);
     }
   }, []);
-
-  const startSettlingAutomation = useCallback(() => {
-    clearSettlingRepeat();
-
-    const durationSec = selectSettlingTime * 60;
-    if (durationSec <= 0) {
-      return;
-    }
-
-    const decreaseRate = 10 / durationSec;
-    const breathInc = (8000 - 200) / durationSec;
-    const drumInc = (1000 - 60) / durationSec;
-    const endVolumeFirstPhase = -9;
-    const volPerSec = (endVolumeFirstPhase - -30) / durationSec;
-
-    bpmRef.current = 30;
-    wetRef.current = 0;
-    breathFRef.current = 200;
-    drumFRef.current = 60;
-    droneVolRef.current = -30;
-
-    let tick = 0;
-    const id = Tone.Transport.scheduleRepeat(() => {
-      tick += 1;
-      if (tick > durationSec) {
-        clearSettlingRepeat();
-        return;
-      }
-
-      droneVolRef.current = Math.min(droneVolRef.current + volPerSec, endVolumeFirstPhase);
-      applyDroneVolume(droneVolRef.current);
-
-      wetRef.current = Math.min(wetRef.current + 1 / durationSec, 1);
-      setReverbWetLevel(wetRef.current);
-
-      breathFRef.current = Math.min(breathFRef.current + breathInc, 8000);
-      increaseFilterBreathFrequency(breathFRef.current);
-
-      drumFRef.current = Math.min(drumFRef.current + drumInc, 1000);
-      increaseFilterDrumFrequency(drumFRef.current);
-
-      bpmRef.current = Math.max(bpmRef.current - decreaseRate, 10);
-      Tone.Transport.bpm.setValueAtTime(bpmRef.current, Tone.Transport.seconds);
-    }, '1s', '1s');
-
-    settlingRepeatIdRef.current = id;
-  }, [applyDroneVolume, clearSettlingRepeat, selectSettlingTime]);
 
   const clearPhaseIntervals = useCallback(() => {
     if (secondPhaseIntervalRef.current != null) {
@@ -232,7 +192,7 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
   }, [applyDroneVolume, clearPhaseIntervals]);
 
   const performSoftReset = useCallback(() => {
-    clearSettlingRepeat();
+    cancelSettlingAudioRamps();
     clearPhaseIntervals();
     clearTimeout(breathDelayTimeoutRef.current);
     breathDelayTimeoutRef.current = null;
@@ -244,11 +204,12 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
     cleanupDroneLoops();
 
     stopAllSamples();
-    Tone.Transport.stop();
-    Tone.Transport.cancel(0);
+    const transport = Tone.getTransport();
+    transport.stop();
+    transport.cancel(0);
 
     resetEffectsToDefaults();
-    Tone.Transport.bpm.value = 30;
+    transport.bpm.value = 30;
 
     bpmRef.current = 30;
     wetRef.current = 0;
@@ -266,7 +227,7 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
 
     setCountdown(selectedTime * 60);
     setCountdownSettlingTime(selectSettlingTime * 60);
-    setText('Press Start');
+    setText(idleStatusText(selectedTime, selectSettlingTime));
     noSleep.disable();
 
     playedEndGongRef.current = false;
@@ -276,7 +237,6 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
   }, [
     selectedTime,
     selectSettlingTime,
-    clearSettlingRepeat,
     clearPhaseIntervals,
     stopAndDisposeLoops,
     stopAndDisposeDroneLoops,
@@ -284,21 +244,27 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
   ]);
 
   const startSession = useCallback(async () => {
-    if (Tone.context.state !== 'running') {
+    const ctx = Tone.getContext();
+    if (ctx.state !== 'running') {
       try {
-        await Tone.context.resume();
+        await ctx.resume();
       } catch (e) {
         console.error('Failed to resume the Tone audio context:', e);
         return;
       }
     }
 
-    startSettlingAutomation();
-
     setIsActive(true);
     noSleep.enable();
 
-    Tone.Transport.bpm.setValueAtTime(30, 0);
+    bpmRef.current = 30;
+    wetRef.current = 0;
+    breathFRef.current = 200;
+    drumFRef.current = 60;
+    droneVolRef.current = -30;
+
+    const transport = Tone.getTransport();
+    transport.bpm.setValueAtTime(30, 0);
     playSample('startGong');
 
     const settlingSecs = selectSettlingTime * 60;
@@ -313,19 +279,23 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
       volumeDownSecondPhase();
     }
 
-    Tone.Transport.start();
+    transport.start();
+    if (settlingSecs > 0) {
+      scheduleSettlingAudioRamps(settlingSecs, isDroneOn);
+    }
   }, [
-    startSettlingAutomation,
     initiateLoops,
     selectSettlingTime,
     droneVolumeDownActive,
     volumeDownSecondPhase,
+    isDroneOn,
   ]);
 
   const toggleTimer = useCallback(async () => {
-    if (Tone.context.state !== 'running') {
+    const ctx = Tone.getContext();
+    if (ctx.state !== 'running') {
       try {
-        await Tone.context.resume();
+        await ctx.resume();
       } catch (error) {
         console.error('Failed to resume the Tone audio context:', error);
         return;
@@ -346,6 +316,15 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
       handleDroneVolume(-100);
     }
   }, [isDroneOn]);
+
+  useEffect(() => {
+    if (!isActive || !useSyntheticDrone || !isDroneOn) {
+      setProceduralDroneActive(false);
+      return;
+    }
+    const run = countdown > 4;
+    setProceduralDroneActive(run);
+  }, [isActive, useSyntheticDrone, isDroneOn, countdown]);
 
   useEffect(() => {
     setCountdown(selectedTime * 60);
@@ -373,21 +352,13 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
 
   useEffect(() => {
     if (!isActive) {
-      setText(
-        `Press Start to begin.\nSettling Down: ${Math.floor(countdownSettlingTime / 60)}:${
-          countdownSettlingTime % 60 < 10 ? '0' : ''
-        }${countdownSettlingTime % 60}`,
-      );
+      setText(idleStatusText(selectedTime, selectSettlingTime));
     } else if (countdown && countdownSettlingTime > 0) {
-      setText(
-        `Settling Down: ${Math.floor(countdownSettlingTime / 60)}:${
-          countdownSettlingTime % 60 < 10 ? '0' : ''
-        }${countdownSettlingTime % 60}`,
-      );
+      setText(`Ease in: ${formatMmSs(countdownSettlingTime)}`);
     } else if (countdown > 0 && countdownSettlingTime === 0) {
       setText('🧘');
     }
-  }, [countdown, countdownSettlingTime, isActive]);
+  }, [countdown, countdownSettlingTime, isActive, selectedTime, selectSettlingTime]);
 
   useEffect(() => {
     if (countdownSettlingTime === 1) {
@@ -401,6 +372,11 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
         return;
       }
       settlingZeroHandledRef.current = true;
+      wetRef.current = 1;
+      breathFRef.current = 8000;
+      drumFRef.current = 1000;
+      bpmRef.current = 10;
+      droneVolRef.current = -9;
       playSample('startGong');
       volumeDownSecondPhase();
       setDroneVolumeDownActive(true);
@@ -408,13 +384,17 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
   }, [countdownSettlingTime, isActive, stopAndDisposeLoops, volumeDownSecondPhase]);
 
   useEffect(() => {
-    if (isActive) {
+    if (!isActive) {
       cleanupDroneLoops();
-      droneLoops();
-    } else {
-      cleanupDroneLoops();
+      return;
     }
-  }, [isActive, droneLoops, cleanupDroneLoops]);
+    if (useSyntheticDrone) {
+      cleanupDroneLoops();
+      return;
+    }
+    cleanupDroneLoops();
+    droneLoops();
+  }, [isActive, useSyntheticDrone, droneLoops, cleanupDroneLoops]);
 
   useEffect(() => {
     if (!isActive || countdown !== 4) {
@@ -449,10 +429,9 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
     if (countdown === 0 && !playedEndGongRef.current) {
       playedEndGongRef.current = true;
       playSample('endGong', 1);
-      clearSettlingRepeat();
       clearPhaseIntervals();
       setText('🙏');
-      Tone.Transport.stop();
+      Tone.getTransport().stop();
 
       endSessionTimeoutRef.current = setTimeout(() => {
         performSoftReset();
@@ -463,19 +442,18 @@ export function useMeditationSession({ selectedTime, selectSettlingTime, isDrone
     countdown,
     isActive,
     volumeUpEnd,
-    clearSettlingRepeat,
     clearPhaseIntervals,
     performSoftReset,
   ]);
 
   useEffect(
     () => () => {
-      clearSettlingRepeat();
+      cancelSettlingAudioRamps();
       clearPhaseIntervals();
       clearTimeout(breathDelayTimeoutRef.current);
       clearTimeout(endSessionTimeoutRef.current);
     },
-    [clearSettlingRepeat, clearPhaseIntervals],
+    [clearPhaseIntervals],
   );
 
   return {

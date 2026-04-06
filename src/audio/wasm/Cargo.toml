@@ -1,0 +1,7 @@
+[workspace]
+members = ["zen_drone", "zen_samples"]
+resolver = "2"
+
+[profile.release]
+opt-level = "z"
+lto = true

@@ -1,86 +1,77 @@
-:root {
-    --main-color: #F6BE9A;
-    --secondary-color: #FAF4D3;
-    --tertiary-color: #004643;
-    --main-background-color: #0C1618;
- }
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
 
- .form-range {
+:root {
+  /* Accent — warm light orange (calm, minimal) */
+  --main-color: #F6BE9A;
+  --main-color-muted: rgba(246, 190, 154, 0.22);
+
+  /* Text */
+  --text-primary-color: #E8EAED;
+  --secondary-color: #9AA3AD;
+  --text-muted-color: #6B7280;
+
+  /* Surfaces & layout */
+  --main-background-color: #0E1114;
+  --surface-color: #1A1F26;
+  --surface-elevated-color: #232A33;
+  --border-color: #2F3640;
+
+  /* Text on accent (buttons) */
+  --on-accent-color: #0E1114;
+
+  /* Legacy token aliases (tailwind: main, sec, ter, dark) */
+  --tertiary-color: var(--surface-color);
+}
+
+.form-range {
   appearance: none;
   -webkit-appearance: none;
-  background: #0C1618;
+  background: var(--surface-elevated-color);
   width: 100%;
-  height: 1.5rem;
-  border-radius: 1rem;
+  height: 0.375rem;
+  border-radius: 9999px;
 }
 
 .form-range::-webkit-slider-thumb {
-  margin-top: -Xpx; /* Adjust X value to align the thumb with the track */
   appearance: none;
   -webkit-appearance: none;
-  width: 25px;
-  height: 25px;
-  background: var(--secondary-color);
+  margin-top: -6px;
+  width: 1.125rem;
+  height: 1.125rem;
+  background: var(--main-color);
   cursor: pointer;
   border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .form-range::-moz-range-thumb {
   appearance: none;
-  width: 25px;
-  height: 25px;
-  background: var(--secondary-color);
+  width: 1.125rem;
+  height: 1.125rem;
+  background: var(--main-color);
   cursor: pointer;
   border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
-
-
- .toggle {
-  display: inline-block;
-  position: relative;
-  height: 100px;
-  width: 100px;
+.form-range::-webkit-slider-runnable-track {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: var(--surface-elevated-color);
 }
 
-.toggle:before {
-  box-shadow: 0;
-  border-radius: 84.5px;
-  background: var(--primary-color);
-  position: absolute;
-  margin-left: -36px;
-  margin-top: -36px;
-  opacity: 0.2;
-  height: 72px;
-  width: 72px;
-  left: 50%;
-  top: 50%;
+.form-range::-moz-range-track {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: var(--surface-elevated-color);
 }
 
-.toggle .button {
-  /* ... (rest of the properties remain the same) ... */
-  background: var(--secondary-color);
-}
-
-.toggle .label {
-  /* ... (rest of the properties remain the same) ... */
-  color: rgba(0, 0, 0, 0.9); /* Adjust if you have a specific variable for text color */
-}
-/* 
-... (rest of the CSS remains the same) ... */
-
-/* CHECKBOX DRONE ON/OFF */
-/* Custom styling for the switch */
-.form-check-input:checked {
-  background-color: #0d6efd; /* Bootstrap primary color */
-  border-color: #0d6efd; /* Bootstrap primary color */
-}
-
-.form-check-input:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Bootstrap primary shadow */
-}
-
-/* MULTILINE TEXT */
 .multiline-text {
   white-space: pre-line;
 }

@@ -20,16 +20,22 @@ const BREATH = new Set(['breath-1', 'breath-2', 'breath-3', 'breath-4']);
 const DRUM = new Set(['ZT-sha-L', 'ZT-sha-R']);
 const DRONE = new Set(['ZT-drone-1', 'ZT-drone-2']);
 
+/** Gongs, breath, drums — load-time WASM processing; drone loops stay Tone-only. */
+export const WASM_SAMPLE_NAMES = SAMPLE_NAMES.filter((name) => !DRONE.has(name));
+
 /**
  * Builds the signal graph once: shared reverb → destination, drone chain unchanged.
+ * @param {AudioWorkletNode | null} [droneWorkletNode] procedural drone; sample-only path when null
  */
-export async function buildGraph(audioBuffers, droneVolumeControl) {
+export async function buildGraph(audioBuffers, droneVolumeControl, droneWorkletNode = null) {
   let reverb;
   let highpassBreath;
   let highpassDrum;
   let lowpassDrone;
   let highpassDrone;
   let droneReverb;
+  let droneSampleGain;
+  let droneProceduralGain = null;
   const players = {};
 
   // DRONE FX (preserve routing and values)
@@ -47,15 +53,25 @@ export async function buildGraph(audioBuffers, droneVolumeControl) {
   reverb.wet.value = 0;
   await reverb.generate();
 
-  reverb.connect(Tone.Destination);
+  const destination = Tone.getDestination();
+  reverb.connect(destination);
 
   highpassBreath.connect(reverb);
   highpassDrum.connect(reverb);
 
+  droneSampleGain = new Tone.Gain(1);
+
   lowpassDrone.connect(highpassDrone);
   highpassDrone.connect(droneReverb);
   droneReverb.connect(droneVolumeControl);
-  droneVolumeControl.connect(Tone.Destination);
+  droneVolumeControl.connect(destination);
+
+  droneSampleGain.connect(lowpassDrone);
+  if (droneWorkletNode) {
+    droneProceduralGain = new Tone.Gain(0);
+    droneWorkletNode.connect(droneProceduralGain.input);
+    droneProceduralGain.connect(lowpassDrone);
+  }
 
   for (const name of SAMPLE_NAMES) {
     const buf = audioBuffers[name];
@@ -72,14 +88,14 @@ export async function buildGraph(audioBuffers, droneVolumeControl) {
     } else if (DRUM.has(name)) {
       player.connect(highpassDrum);
     } else if (DRONE.has(name)) {
-      player.connect(lowpassDrone);
+      player.connect(droneSampleGain);
     } else {
       player.connect(reverb);
     }
     players[name] = player;
   }
 
-  Tone.Destination.volume.value = -6;
+  destination.volume.value = -6;
 
   return {
     players,
@@ -89,5 +105,8 @@ export async function buildGraph(audioBuffers, droneVolumeControl) {
     lowpassDrone,
     highpassDrone,
     droneReverb,
+    droneSampleGain,
+    droneProceduralGain,
+    droneWorkletNode,
   };
 }
