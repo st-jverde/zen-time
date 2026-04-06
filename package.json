@@ -6,7 +6,7 @@
   "homepage": "https://zen-time.netlify.app/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "install:wasm": "bash -lc 'command -v wasm-pack >/dev/null 2>&1 || curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh'",
+    "install:wasm": "bash scripts/install-wasm.sh",
     "build:wasm": "bash -c 'export PATH=\"$HOME/.cargo/bin:$PATH\"; cd src/audio/wasm/zen_drone && wasm-pack build . --target bundler --out-dir pkg && cd ../zen_samples && wasm-pack build . --target web --out-dir pkg'",
     "prestart": "npm run install:wasm && npm run build:wasm",
     "prebuild": "npm run install:wasm && npm run build:wasm",
