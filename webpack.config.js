@@ -35,10 +35,11 @@ module.exports = {
           })
         : new webpack.EnvironmentPlugin({
             NODE_ENV: 'production',
-            REACT_APP_CLOUDINARY_CLOUD_NAME: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || '',
             EXPERIMENTAL_WASM_SAMPLES: process.env.EXPERIMENTAL_WASM_SAMPLES ?? 'false',
           }),
-      new Dotenv(),
+      // REACT_APP_* comes only from here (avoids DefinePlugin conflict with EnvironmentPlugin).
+      // systemvars: include CI env (e.g. Netlify) when not in .env
+      new Dotenv({ systemvars: true }),
       new HtmlWebpackPlugin({
         template: './index.html',
         minify: isDevelopment ? false : {
