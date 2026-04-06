@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "homepage": "https://zen-time.netlify.app/",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "install:wasm": "bash scripts/install-wasm.sh",
