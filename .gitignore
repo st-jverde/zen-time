@@ -90,6 +90,9 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+# Rust/Cargo (workspace root: src/audio/wasm/)
+src/audio/wasm/target/
+
 # wasm-pack output (run npm run build:wasm)
 src/audio/wasm/zen_drone/pkg/
 src/audio/wasm/zen_samples/pkg/
